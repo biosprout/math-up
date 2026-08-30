@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>MATH UP! 計算トレーニング</title>
+<meta name="description" content="加減乗除の100本ノック、九九の逆引き、補数、概算、正負の数。暗算力をきたえる計算トレーニング。無料・広告なし。">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1E7A5A">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="MATH UP!">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F1F8F4;--panel:#FFFFFF;--panel2:#E6F2EB;
+    --primary:#1E7A5A;--primary-dark:#155C43;--accent:#D98A1F;
+    --danger:#D93B4E;--text:#12241D;--sub:#5F7A6E;--border:#D6E7DE;
+    --shadow:0 8px 28px rgba(30,122,90,.10);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:'Noto Sans JP',system-ui,sans-serif;color:var(--text);
+    background:radial-gradient(circle at 20% 0%,#DCEFE5 0%,var(--bg) 55%);
+    min-height:100%;-webkit-font-smoothing:antialiased}
+  .app{max-width:520px;margin:0 auto;padding:16px 16px 40px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .logo{font-family:'Poppins',sans-serif;font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--primary)}
+  .logo span{color:var(--accent)}
+  .sub{font-size:11px;color:var(--sub);font-weight:600;margin-top:1px}
+  .rankpill{background:var(--panel);border:1px solid var(--border);border-radius:999px;
+    padding:6px 14px;font-family:'Poppins';font-size:12px;font-weight:800;color:var(--sub)}
+
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:18px;
+    padding:16px 18px;margin-bottom:12px;box-shadow:var(--shadow)}
+  .label{font-size:12px;font-weight:800;color:var(--sub);margin:16px 0 8px}
+  .help{font-size:11.5px;color:var(--sub);font-weight:500;line-height:1.7}
+
+  .btn{width:100%;border:0;border-radius:14px;padding:14px;font-family:inherit;
+    font-size:14px;font-weight:800;cursor:pointer}
+  .btn-primary{background:var(--primary);color:#fff}
+  .btn-accent{background:var(--accent);color:#fff}
+  .btn-ghost{background:var(--panel);border:1px solid var(--border);color:var(--text)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .back{background:none;border:0;color:var(--sub);font-size:13px;font-weight:700;
+    padding:4px 0 10px;cursor:pointer;font-family:inherit}
+
+  /* モード一覧 */
+  .opts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .opts4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .opt{background:var(--panel);border:1.5px solid var(--border);border-radius:14px;
+    padding:12px 6px;text-align:center;cursor:pointer;font-family:inherit;color:var(--text)}
+  .opt.on{border-color:var(--primary);background:var(--panel2)}
+  .opt b{display:block;font-size:13px;font-weight:800}
+  .opt.on b{color:var(--primary)}
+  .opt i{display:block;font-style:normal;font-size:10px;color:var(--sub);font-weight:600;margin-top:3px;line-height:1.4}
+  .modes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .mode{background:var(--panel);border:1px solid var(--border);border-radius:16px;
+    padding:14px;text-align:left;cursor:pointer;font-family:inherit;box-shadow:var(--shadow)}
+  .mode .mi{font-size:22px;display:block;margin-bottom:6px}
+  .mode .mn{font-size:13.5px;font-weight:800;line-height:1.35}
+  .mode .md{font-size:10.5px;color:var(--sub);font-weight:600;margin-top:4px;line-height:1.5}
+  .mode .mb{font-family:'Poppins';font-size:10px;color:var(--accent);font-weight:800;margin-top:6px}
+
+  /* 出題画面 */
+  .qhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .qhead h2{font-size:16px;font-weight:900}
+  .qmeta{font-family:'Poppins';font-size:13px;font-weight:800;color:var(--accent)}
+  .bar{height:6px;background:var(--panel2);border-radius:99px;overflow:hidden;margin-bottom:14px}
+  .bar i{display:block;height:100%;background:var(--primary);transition:width .2s}
+  .qbox{background:var(--panel);border:1px solid var(--border);border-radius:20px;
+    padding:26px 20px;text-align:center;margin-bottom:12px;box-shadow:var(--shadow)}
+  .qtext{font-family:'Poppins',sans-serif;font-size:34px;font-weight:800;letter-spacing:1px;line-height:1.3}
+  .qtext.sm{font-size:26px}
+  .qhint{font-size:11.5px;color:var(--sub);font-weight:600;margin-top:8px}
+  .ansbox{font-family:'Poppins';font-size:30px;font-weight:800;min-height:46px;
+    display:flex;align-items:center;justify-content:center;gap:2px;
+    border-bottom:3px solid var(--border);margin:12px auto 0;width:70%}
+  .ansbox.ok{border-color:var(--primary);color:var(--primary)}
+  .ansbox.ng{border-color:var(--danger);color:var(--danger)}
+  .cursor{display:inline-block;width:2px;height:30px;background:var(--primary);
+    animation:bl 1s step-end infinite}
+  @keyframes bl{50%{opacity:0}}
+
+  /* キーパッド */
+  .pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .pad button{background:var(--panel);border:1px solid var(--border);border-radius:14px;
+    padding:16px 0;font-family:'Poppins';font-size:22px;font-weight:700;color:var(--text);
+    cursor:pointer;box-shadow:0 2px 0 rgba(30,122,90,.06)}
+  .pad button:active{transform:translateY(1px)}
+  .pad .wide{grid-column:span 1}
+  .pad .fn{font-size:16px;color:var(--sub)}
+  .pad .go{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+  .fb{border-radius:14px;padding:12px 14px;margin-top:10px;font-size:13px;font-weight:700;line-height:1.65}
+  .fb.ok{background:var(--panel2);color:var(--primary)}
+  .fb.ng{background:#FCE9EC;color:var(--danger)}
+  .fb .tip{display:block;font-size:11.5px;font-weight:600;color:var(--sub);margin-top:5px}
+
+  /* 結果 */
+  .rank{font-family:'Poppins';font-size:52px;font-weight:800;color:var(--primary);text-align:center}
+  .rline{display:flex;justify-content:space-between;font-size:13px;font-weight:700;
+    padding:9px 0;border-bottom:1px dashed var(--border)}
+  .rline:last-child{border:0}
+  .rline span:last-child{font-family:'Poppins';color:var(--primary)}
+
+  /* 記録 */
+  .stat{display:flex;align-items:center;gap:14px}
+  .ring{width:74px;height:74px;flex:0 0 auto}
+  .stat .num{font-family:'Poppins';font-size:20px;font-weight:800}
+  .rec{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;
+    font-weight:700;padding:8px 0;border-bottom:1px dashed var(--border)}
+  .rec:last-child{border:0}
+  .rec b{font-family:'Poppins';color:var(--accent);font-size:13px}
+
+  .zkr{display:flex;align-items:flex-start;gap:11px;background:var(--panel);
+    border:1px solid var(--border);border-radius:14px;padding:12px 13px;margin-bottom:7px;opacity:.5}
+  .zkr.got{opacity:1}
+  .zke{font-size:22px;flex:0 0 auto;line-height:1.2}
+  .zkb{flex:1;min-width:0}
+  .zkn{font-size:13px;font-weight:800;line-height:1.35}
+  .zkd{font-size:11px;color:var(--sub);font-weight:500;line-height:1.65;margin-top:4px}
+  .zktag{display:inline-block;font-size:9.5px;font-weight:800;border-radius:6px;padding:1px 6px;margin-left:4px;vertical-align:1px}
+  .zktag.N{background:var(--panel2);color:var(--sub)}
+  .zktag.R{background:#DCEEF9;color:#1F6FA8}
+  .zktag.SR{background:#FBEFD8;color:#A87415}
+  .zktag.H{background:#E9ECFF;color:#4A57C4}
+  .ach-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .achb{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:9px 10px;opacity:.45}
+  .achb.got{opacity:1;border-color:var(--accent)}
+  .achb .an{font-size:11px;font-weight:800;line-height:1.35}
+  .achb .ad{font-size:9.5px;color:var(--sub);font-weight:600;margin-top:2px;line-height:1.45}
+
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);
+    background:#12241D;color:#fff;padding:11px 18px;border-radius:12px;font-size:13px;
+    font-weight:700;z-index:99;max-width:88%;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+  #updBar{display:none;align-items:center;gap:10px;background:var(--accent);color:#3A2400;
+    padding:10px 14px;border-radius:12px;margin-bottom:12px;font-size:13px;font-weight:800}
+  #updBar button{background:#3A2400;color:var(--accent);border:0;border-radius:8px;
+    padding:7px 12px;font-weight:800;font-size:12px;cursor:pointer;font-family:inherit}
+  textarea{width:100%;font-family:ui-monospace,Menlo,monospace;font-size:11px;
+    background:var(--bg);color:var(--text);border:1px solid var(--border);
+    border-radius:10px;padding:10px;resize:vertical}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div>
+      <div class="logo">MATH <span>UP!</span></div>
+      <div class="sub">計算トレーニング / 小学〜中学</div>
+    </div>
+    <div class="rankpill" id="rankPill">Lv.1</div>
+  </div>
+  <div id="updBar"><b style="flex:1">新しいバージョンがあります</b><button onclick="forceUpdate()">更新する</button></div>
+  <div id="screen"></div>
+</div>
+
+<script>
+const STORE_KEY='mathup_v1';
+const APP_VER='20260830c';
+const $=id=>document.getElementById(id);
+const screen_=$('screen');
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+function todayStr(){const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
+function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;
+  document.body.appendChild(t);setTimeout(()=>t.remove(),2200);}
+function pop(n){if(navigator.vibrate)try{navigator.vibrate(n||10)}catch(e){}}
+
+/* ===== モード定義 ===== */
+const DIFF=[{v:1,n:'やさしい',d:'1けた中心'},{v:2,n:'ふつう',d:'2けた中心'},{v:3,n:'むずかしい',d:'3けた・2けた×2けた'}];
+const OPS=[{v:'add',n:'たし算',e:'＋'},{v:'sub',n:'ひき算',e:'−'},{v:'mul',n:'かけ算',e:'×'},{v:'div',n:'わり算',e:'÷'}];
+const MODES=[
+ {id:'drill', i:'💯', n:'100本ノック', d:'四則を混ぜて100問', mk:mkDrill, count:100, opt:'full'},
+ {id:'add',   i:'➕', n:'たし算・ひき算', d:'くり上がり・くり下がりを重点的に', mk:mkAddSub, count:30, opt:'diff'},
+ {id:'mul',   i:'✖️', n:'かけ算・わり算', d:'九九から2けたの計算まで', mk:mkMulDiv, count:30, opt:'diff'},
+ {id:'kuku',  i:'🔄', n:'九九の逆引き', d:'「56は何×何？」で因数の感覚を養う', mk:mkKuku, count:20},
+ {id:'hosu',  i:'🎯', n:'補数', d:'10・100・1000をつくる相棒を探す', mk:mkHosu, count:20},
+ {id:'seifu', i:'±',  n:'正負の数', d:'符号のミスをなくす（中1）', mk:mkSeifu, count:30},
+ {id:'kufuu', i:'💡', n:'工夫して計算', d:'分けたり寄せたりして速く解く', mk:mkKufuu, count:20},
+ {id:'gaisan',i:'📏', n:'概算', d:'およその大きさをつかむ', mk:mkGaisan, count:15},
+];
+function modeOf(id){return MODES.find(m=>m.id===id);}
+
+/* ===== 問題生成 ===== */
+function mkAdd(d){
+  if(d===1){const a=rnd(2,9),b=rnd(2,9);return{q:`${a} + ${b}`,a:a+b};}
+  if(d===2){const a=rnd(11,99),b=rnd(11,99);return{q:`${a} + ${b}`,a:a+b};}
+  const a=rnd(101,999),b=rnd(101,999);return{q:`${a} + ${b}`,a:a+b};
+}
+function mkSub(d){
+  if(d===1){const a=rnd(5,18),b=rnd(2,a-1);return{q:`${a} - ${b}`,a:a-b};}
+  if(d===2){const a=rnd(21,199),b=rnd(11,a-1);return{q:`${a} - ${b}`,a:a-b};}
+  const a=rnd(301,999),b=rnd(101,a-1);return{q:`${a} - ${b}`,a:a-b};
+}
+function mkMul(d){
+  if(d===1){const a=rnd(2,9),b=rnd(2,9);return{q:`${a} × ${b}`,a:a*b};}
+  if(d===2){const a=rnd(11,29),b=rnd(3,9);return{q:`${a} × ${b}`,a:a*b};}
+  const a=rnd(12,49),b=rnd(11,29);return{q:`${a} × ${b}`,a:a*b};
+}
+function mkDiv(d){
+  if(d===1){const b=rnd(2,9),ans=rnd(2,9);return{q:`${b*ans} ÷ ${b}`,a:ans};}
+  if(d===2){const b=rnd(3,9),ans=rnd(11,29);return{q:`${b*ans} ÷ ${b}`,a:ans};}
+  const b=rnd(11,29),ans=rnd(3,19);return{q:`${b*ans} ÷ ${b}`,a:ans};
+}
+function mkAddSub(d){ return rnd(0,1)?mkAdd(d||2):mkSub(d||2); }
+function mkMulDiv(d){ return rnd(0,1)?mkMul(d||2):mkDiv(d||2); }
+function mkDrill(d,ops){
+  const use=(ops&&ops.length)?ops:['add','sub','mul','div'];
+  const t=pick(use), dd=d||2;
+  return t==='add'?mkAdd(dd):t==='sub'?mkSub(dd):t==='mul'?mkMul(dd):mkDiv(dd);
+}
+function mkKuku(){
+  const a=rnd(2,9),b=rnd(2,9);
+  return{q:`${a*b} = ${a} × ?`,a:b,hint:'九九を逆からたどる'};
+}
+function mkHosu(){
+  const base=pick([10,100,1000]);
+  const a=base===10?rnd(1,9):base===100?rnd(11,99):rnd(101,999);
+  return{q:`${a} + ? = ${base}`,a:base-a,hint:'あといくつで '+base+' になる？'};
+}
+function mkSeifu(){
+  const t=rnd(1,4);
+  const s=()=>rnd(0,1)?1:-1;
+  const f=n=>n<0?`(${n})`:`${n}`;
+  if(t===1){const a=s()*rnd(2,20),b=s()*rnd(2,20);return{q:`${a} + ${f(b)}`,a:a+b};}
+  if(t===2){const a=s()*rnd(2,20),b=s()*rnd(2,20);return{q:`${a} - ${f(b)}`,a:a-b};}
+  if(t===3){const a=s()*rnd(2,9),b=s()*rnd(2,9);return{q:`${a} × ${f(b)}`,a:a*b};}
+  const b=s()*rnd(2,9),ans=s()*rnd(2,9);return{q:`${b*ans} ÷ ${f(b)}`,a:ans};
+}
+function mkKufuu(){
+  const t=rnd(1,4);
+  if(t===1){const a=pick([98,99,102,103]),b=rnd(3,9);
+    return{q:`${a} × ${b}`,a:a*b,hint:`${a>100?'100+':'100−'}${Math.abs(a-100)} と考える`};}
+  if(t===2){const b=pick([4,8,12,16,20,24]);
+    return{q:`25 × ${b}`,a:25*b,hint:'25×4=100 を使う'};}
+  if(t===3){const a=rnd(11,49);
+    return{q:`${a} × 11`,a:a*11,hint:'×10 と ×1 に分ける'};}
+  const a=rnd(12,60);
+  return{q:`${a} × 5`,a:a*5,hint:'×10 してから半分にする'};
+}
+function mkGaisan(){
+  const a=pick([198,297,396,485,502,613,798]),b=rnd(11,29);
+  const exact=a*b;
+  const base=Math.pow(10,String(exact).length-1);
+  const near=Math.round(exact/base)*base;
+  const set=new Set([near, near+base, Math.max(base,near-base), near*10]);
+  const opts=[...set].slice(0,4);
+  while(opts.length<4)opts.push(opts[opts.length-1]+base);
+  return{q:`${a} × ${b} はおよそ？`,a:near,
+    choices:opts.sort(()=>Math.random()-.5),hint:'けた数で見当をつける'};
+}
+
+/* ===== 状態 ===== */
+function load(){
+  try{const r=localStorage.getItem(STORE_KEY);if(r)return JSON.parse(r);}catch(e){}
+  return {xp:0,ach:[],best:{},total:0,correct:0,streak:{day:'',count:0},
+          stat:{day:'',dayQ:0,modes:[]},wrong:{},cards:[],cardMile:0};
+}
+function save(){try{localStorage.setItem(STORE_KEY,JSON.stringify(state));}catch(e){}}
+let state=load();
+if(!state.best)state.best={};
+if(!state.stat)state.stat={day:'',dayQ:0,modes:[]};
+if(!state.wrong)state.wrong={};
+if(!state.cards)state.cards=[];
+if(state.cardMile==null)state.cardMile=0;
+
+const MAXLV=20;
+function xpNeed(l){return 40*l+2*l*l;}
+function lvlInfo(xp){
+  let l=1,acc=0,need=xpNeed(1);
+  while(l<MAXLV&&xp>=acc+need){acc+=need;l++;need=xpNeed(l);}
+  if(l>=MAXLV)return{level:MAXLV,cur:Math.max(0,xp-acc),need:xpNeed(MAXLV),max:true};
+  return{level:l,cur:xp-acc,need};
+}
+const TITLES=[
+ {n:'指を折る人',e:'✋'},{n:'数をかぞえる人',e:'🔢'},{n:'たし算の人',e:'➕'},
+ {n:'ひき算の人',e:'➖'},{n:'九九を覚えた人',e:'📖'},{n:'かけ算の人',e:'✖️'},
+ {n:'わり算の人',e:'➗'},{n:'暗算に慣れた人',e:'🧠'},{n:'補数を使う人',e:'🎯'},
+ {n:'符号を操る人',e:'±'},{n:'工夫する人',e:'💡'},{n:'見当をつける人',e:'📏'},
+ {n:'速算の人',e:'⚡'},{n:'検算する人',e:'🔍'},{n:'そろばんの心得',e:'🧮'},
+ {n:'計算が友だち',e:'🤝'},{n:'数と遊ぶ人',e:'🎲'},{n:'計算の達人',e:'🏆'},
+ {n:'数の感覚をもつ人',e:'✨'},{n:'計算を極めた人',e:'👑'},
+];
+function titleOf(l){return TITLES[Math.min(l,TITLES.length)-1];}
+
+const ACH=[
+ {id:'first',name:'はじめの一歩',desc:'1回やりきる'},
+ {id:'drill1',name:'100本ノック完走',desc:'100本ノックを最後まで'},
+ {id:'drill90',name:'90点の壁',desc:'100本ノックで90問以上正解'},
+ {id:'drill100',name:'パーフェクト',desc:'100本ノックで全問正解'},
+ {id:'q100',name:'百問',desc:'累計100問に正解'},
+ {id:'q500',name:'五百問',desc:'累計500問に正解'},
+ {id:'q2000',name:'二千問',desc:'累計2000問に正解'},
+ {id:'combo10',name:'10連続',desc:'10問連続で正解'},
+ {id:'combo30',name:'30連続',desc:'30問連続で正解'},
+ {id:'combo50',name:'50連続',desc:'50問連続で正解'},
+ {id:'allmode',name:'全モード制覇',desc:'8つのモードすべてを試す'},
+ {id:'kuku',name:'九九マスター',desc:'九九の逆引きで全問正解'},
+ {id:'hosu',name:'補数の達人',desc:'補数で全問正解'},
+ {id:'seifu',name:'符号の番人',desc:'正負の数で全問正解'},
+ {id:'kufuu',name:'工夫の名人',desc:'工夫して計算で全問正解'},
+ {id:'streak3',name:'3日連続',desc:'3日連続で練習'},
+ {id:'streak7',name:'週間皆勤',desc:'7日連続で練習'},
+ {id:'streak30',name:'継続の力',desc:'30日連続で練習'},
+ {id:'lv10',name:'Lv.10 到達',desc:'レベル10に到達'},
+ {id:'lv20',name:'最高レベル',desc:'レベル20に到達'},
+ {id:'cards10',name:'収集家',desc:'図鑑を10種あつめる'},
+ {id:'cards25',name:'蒐集家',desc:'図鑑を25種あつめる'},
+ {id:'cardsall',name:'数の博物館長',desc:'図鑑をコンプリート'},
+];
+const ACH_SECRET=[
+ {id:'nightowl',name:'夜の計算',desc:'深夜0時〜4時に練習した'},
+ {id:'earlybird',name:'朝の計算',desc:'早朝5時〜7時に練習した'},
+ {id:'marathon',name:'計算マラソン',desc:'1日に200問回答した'},
+ {id:'speed',name:'電光石火',desc:'100本ノックを5分以内に完走'},
+ {id:'comeback',name:'雪辱',desc:'まちがえた問題をすべて正解にする'},
+ {id:'secret',name:'数の神秘',desc:'隠し図鑑を手に入れた'},
+];
+function achAll(){return ACH.concat(ACH_SECRET);}
+function isSecret(id){return ACH_SECRET.some(a=>a.id===id);}
+function unlock(id){
+  if(state.ach.includes(id))return;
+  state.ach.push(id);save();
+  const a=achAll().find(x=>x.id===id);
+  setTimeout(()=>toast((isSecret(id)?'🕵️ 隠し実績を発見: ':'🏅 実績解除: ')+(a?a.name:id)),700);
+}
+function addXp(n){
+  const b=lvlInfo(state.xp).level;
+  state.xp+=n;
+  const a=lvlInfo(state.xp).level;
+  if(a>b){pop(20);setTimeout(()=>toast('🎉 Lv.'+a+'「'+titleOf(a).n+'」に到達！'),350);
+    if(a%2===0)grantCard();}
+  save();
+}
+function bumpQ(){
+  const t=todayStr();
+  if(state.stat.day!==t){state.stat.day=t;state.stat.dayQ=0;}
+  state.stat.dayQ++;
+  const h=new Date().getHours();
+  if(h<5)unlock('nightowl'); else if(h<8)unlock('earlybird');
+  if(state.stat.dayQ>=200)unlock('marathon');
+}
+function touchStreak(){
+  const t=todayStr();
+  if(state.streak.day===t)return;
+  const y=new Date();y.setDate(y.getDate()-1);
+  const ys=y.getFullYear()+'-'+(y.getMonth()+1)+'-'+y.getDate();
+  state.streak.count=(state.streak.day===ys)?state.streak.count+1:1;
+  state.streak.day=t;
+  if(state.streak.count%7===0)grantCard();
+  save();
+}
+function checkAch(){
+  const lv=lvlInfo(state.xp).level;
+  if(state.correct>=100)unlock('q100');
+  if(state.correct>=500)unlock('q500');
+  if(state.correct>=2000)unlock('q2000');
+  if(state.streak.count>=3)unlock('streak3');
+  if(state.streak.count>=7)unlock('streak7');
+  if(state.streak.count>=30)unlock('streak30');
+  if(lv>=10)unlock('lv10');
+  if(lv>=20)unlock('lv20');
+  if((state.stat.modes||[]).length>=MODES.length)unlock('allmode');
+  if(Object.keys(state.wrong).length===0&&state.total>50)unlock('comeback');
+  const cn=cardsNormal().filter(c=>(state.cards||[]).includes(c.id)).length;
+  if(cn>=10)unlock('cards10');
+  if(cn>=25)unlock('cards25');
+  if(cn>=cardsNormal().length)unlock('cardsall');
+  if(CARDS.some(c=>c.r==='H'&&(state.cards||[]).includes(c.id)))unlock('secret');
+}
+
+
+const CARDS=[
+ {id:'zero',r:'N',e:'0️⃣',n:'ゼロの発見',d:'インドで「何もない」を数として扱う考えが生まれた。位取り記数法が可能になり、大きな数を書けるようになった'},
+ {id:'pi',r:'N',e:'🥧',n:'円周率',d:'3.14159…と無限に続き、くり返しもない。古代エジプトやバビロニアでも近い値が使われていた'},
+ {id:'kuku_origin',r:'N',e:'📖',n:'九九の歴史',d:'奈良時代には日本に伝わっていた。当時は「九九八十一」から始めたため「九九」と呼ばれる'},
+ {id:'arabic',r:'N',e:'🔢',n:'アラビア数字',d:'インドで生まれ、アラビアを経てヨーロッパへ伝わった。だから正しくはインド・アラビア数字'},
+ {id:'soroban',r:'N',e:'🧮',n:'そろばん',d:'珠の位置で数を表す計算器具。熟練者は珠を頭に思い浮かべて暗算する。これを珠算式暗算という'},
+ {id:'plus_minus',r:'N',e:'➕',n:'＋と−の記号',d:'15世紀ごろのヨーロッパで、樽の中身の過不足を示す印として使われたのが起源という説がある'},
+ {id:'equal',r:'N',e:'🟰',n:'イコールの由来',d:'1557年、レコードが「2本の平行線ほど等しいものはない」として考案した'},
+ {id:'times',r:'N',e:'✖️',n:'かけ算の記号',d:'×はオートレッドが、・はライプニッツが用いた。xと紛らわしいため数学では・や省略が好まれる'},
+ {id:'man_oku',r:'N',e:'💰',n:'万・億・兆',d:'4けたごとに単位が変わる。一・十・百・千・万・億・兆・京と続き、無量大数まで名前がある'},
+ {id:'sen_man',r:'N',e:'🌏',n:'英語のけた',d:'英語は3けたごと（thousand, million, billion）。日本語の4けた区切りと合わないので換算が要る'},
+ {id:'even_odd',r:'N',e:'⚖️',n:'偶数と奇数',d:'2で割り切れるかどうか。一の位だけ見れば判定できる。0は偶数として扱う'},
+ {id:'prime',r:'N',e:'🔑',n:'素数',d:'1とその数自身でしか割れない数。2,3,5,7,11…と無限に続くことをユークリッドが証明した'},
+ {id:'one_not_prime',r:'N',e:'1️⃣',n:'1が素数でない理由',d:'1を素数に含めると、素因数分解の表し方が一通りに決まらなくなる。だから定義から外されている'},
+ {id:'div3',r:'N',e:'🔍',n:'3の倍数の見分け方',d:'各けたの数字をたして3の倍数なら、元の数も3の倍数。9の倍数も同じ方法で判定できる'},
+ {id:'div9',r:'N',e:'9️⃣',n:'九去法',d:'各けたをたした余りで検算する方法。計算ミスの多くをすばやく見つけられる'},
+ {id:'x_unknown',r:'N',e:'❓',n:'なぜxを使うのか',d:'デカルトが未知数にアルファベット末尾（x,y,z）、既知数に先頭（a,b,c）を使ったのが定着した'},
+ {id:'fibonacci',r:'R',e:'🌻',n:'フィボナッチ数列',d:'1,1,2,3,5,8,13…と前2つの和が続く。ヒマワリの種の並びや松ぼっくりの螺旋の数に現れる'},
+ {id:'golden',r:'R',e:'📐',n:'黄金比',d:'約1.618。フィボナッチ数列の隣どうしの比はこの値に近づいていく'},
+ {id:'gauss',r:'R',e:'👦',n:'ガウスの少年時代',d:'1から100までの和を求める課題を、両端から組にして瞬時に解いたという逸話が伝わる。答えは5050'},
+ {id:'archimedes_pi',r:'R',e:'⭕',n:'アルキメデスの円周率',d:'円に内接・外接する多角形を使い、円周率が3.1408と3.1429の間にあることを示した'},
+ {id:'zero_div',r:'R',e:'🚫',n:'0で割れない理由',d:'6÷0=aとすると a×0=6 になるが、どんな数も0倍すれば0なので成り立たない。だから定義できない'},
+ {id:'neg_neg',r:'R',e:'±',n:'マイナス×マイナス',d:'なぜプラスになるのか。分配法則を保つためにそう定めると、計算の規則全体が矛盾なくつながる'},
+ {id:'sosuu_dai',r:'R',e:'🔐',n:'素数と暗号',d:'大きな数の素因数分解が難しいことが、インターネットの暗号を支えている。素数は実用の要でもある'},
+ {id:'perfect',r:'R',e:'✨',n:'完全数',d:'自分自身を除く約数の和が自分に等しい数。6=1+2+3、28=1+2+4+7+14。3番目は496'},
+ {id:'infinity',r:'R',e:'♾',n:'無限の大きさ',d:'カントールは無限にも大小があることを示した。自然数の無限より実数の無限のほうが大きい'},
+ {id:'mersenne',r:'R',e:'🖥',n:'最大の素数',d:'現在知られている最大の素数は2500万けたを超える。世界中のコンピュータが協力して探している'},
+ {id:'kuku_india',r:'R',e:'🇮🇳',n:'インドの19×19',d:'インドでは19×19まで暗記する学校があると言われる。2けたのかけ算が速くなる'},
+ {id:'napier',r:'R',e:'📊',n:'対数の発明',d:'ネイピアが考案。かけ算をたし算に変える仕組みで、天文学者の計算時間を劇的に短縮した'},
+ {id:'ramanujan',r:'SR',e:'🚕',n:'1729という数',d:'ラマヌジャンが「2通りの立方数の和で表せる最小の数」と即答した逸話で有名。1³+12³=9³+10³=1729'},
+ {id:'euler',r:'SR',e:'🧠',n:'オイラーの等式',d:'e^(iπ)+1=0。円周率・自然対数の底・虚数単位・1・0が一つの式で結ばれる。最も美しい式と呼ばれる'},
+ {id:'collatz',r:'SR',e:'🌀',n:'コラッツ予想',d:'偶数なら半分、奇数なら3倍して1を足す。どんな数から始めても必ず1になる、とされるが未だ証明されていない'},
+ {id:'seki',r:'SR',e:'🎌',n:'関孝和',d:'江戸時代の和算家。行列式に相当する考えをヨーロッパとほぼ同時期に独自に発見していた'},
+ {id:'sangaku',r:'SR',e:'⛩',n:'算額',d:'江戸時代、難問を解いた記念に神社へ額を奉納する風習があった。庶民が数学を娯楽として楽しんでいた証'},
+ {id:'monty',r:'SR',e:'🚪',n:'モンティ・ホール問題',d:'3つの扉から1つを選び、外れが1つ開かれたあと選び直すべきか。答えは「変えるべき」で、直感に強く反する'},
+ {id:'pi_day',r:'H',e:'📅',n:'円周率の記録',d:'コンピュータによる円周率の計算は100兆けたを超えている。実用上は40けたもあれば宇宙の大きさを原子の精度で計算できる'},
+ {id:'four_four',r:'H',e:'4️⃣',n:'4つの4',d:'4を4つと演算記号だけで0から100までの数を作る遊び。4+4-4-4=0、44÷4-4=7など'},
+ {id:'benford',r:'H',e:'📉',n:'ベンフォードの法則',d:'自然に集まった数字の先頭は1が約30%と最も多い。会計の不正検出にも使われている'},
+ {id:'birthday',r:'H',e:'🎂',n:'誕生日のパラドックス',d:'23人集まれば、同じ誕生日の人がいる確率が50%を超える。直感よりずっと少ない人数で起こる'},
+ {id:'zero_pow',r:'H',e:'⁰',n:'0乗が1になる理由',d:'2³÷2³=2⁰であり、同時に8÷8=1。指数法則を保つには0乗を1と定めるほかない'},
+ {id:'kanji_kazu',r:'H',e:'🈁',n:'大字',d:'契約書で一を壱、十を拾と書くのは、改ざんを防ぐため。数字に線を足すだけで書き換えられてしまうから'},
+];
+function cardsNormal(){return CARDS.filter(c=>c.r!=='H');}
+function grantCard(){
+  const have=new Set(state.cards||[]);
+  const hid=CARDS.filter(c=>c.r==='H'&&!have.has(c.id));
+  if(hid.length&&Math.random()<0.04){
+    const pk=hid[Math.floor(Math.random()*hid.length)];
+    state.cards.push(pk.id);save();
+    setTimeout(()=>{toast('🔮 隠し図鑑を発見！ '+pk.e+' '+pk.n);pop(20);},1200);
+    return;
+  }
+  const pool=CARDS.filter(c=>c.r!=='H'&&!have.has(c.id));
+  if(!pool.length)return;
+  const W={N:6,R:3,SR:1};
+  let tot=0;pool.forEach(c=>tot+=W[c.r]);
+  let x=Math.random()*tot,pk=pool[0];
+  for(const c of pool){x-=W[c.r];if(x<=0){pk=c;break;}}
+  state.cards.push(pk.id);save();
+  setTimeout(()=>{toast('📖 図鑑に追加: '+pk.e+' '+pk.n+(pk.r==='SR'?'（超レア！）':pk.r==='R'?'（レア）':''));pop(10);},1200);
+}
+function checkCardMilestone(){
+  if(!state.cardMile)state.cardMile=0;
+  const marks=[20,50,90,140,200,270,350,440,540,650,770,900,1040,1190,1350,1520,1700,1890,2090,2300];
+  let due=0;marks.forEach(m=>{if(state.correct>=m)due++;});
+  while(state.cardMile<due){state.cardMile++;grantCard();}
+  save();
+}
+function renderZukan(){
+  const have=new Set(state.cards||[]);
+  const norm=cardsNormal();
+  const got=norm.filter(c=>have.has(c.id)).length;
+  const sec=(r,label)=>{
+    const cs=CARDS.filter(c=>c.r===r);
+    return `<div class="label">${label}（${cs.filter(c=>have.has(c.id)).length}/${cs.length}）</div>`+
+      cs.map(c=>have.has(c.id)
+        ?`<div class="zkr got"><span class="zke">${c.e}</span><div class="zkb"><div class="zkn">${c.n} <span class="zktag ${c.r}">${c.r==='SR'?'超レア':c.r==='R'?'レア':'ふつう'}</span></div><div class="zkd">${c.d}</div></div></div>`
+        :`<div class="zkr"><span class="zke">🔒</span><div class="zkb"><div class="zkn" style="color:var(--sub)">？？？</div><div class="zkd">レベルアップ・実績・正解数の節目で手に入る</div></div></div>`).join('');
+  };
+  const hid=CARDS.filter(c=>c.r==='H'&&have.has(c.id));
+  const hidSec=hid.length?`<div class="label">🔮 隠し図鑑（${hid.length}）</div>`+
+    hid.map(c=>`<div class="zkr got" style="border-color:#5A68D8"><span class="zke">${c.e}</span><div class="zkb"><div class="zkn">${c.n} <span class="zktag H">隠し</span></div><div class="zkd">${c.d}</div></div></div>`).join(''):'';
+  screen_.innerHTML=`
+    <button class="back" onclick="renderHome()">‹ もどる</button>
+    <div class="qhead"><h2>📖 数の図鑑</h2><span class="qmeta">${got}/${norm.length} 発見</span></div>
+    ${got>=norm.length?'<div class="card" style="text-align:center"><b style="color:var(--accent)">🏆 コンプリート！</b></div>':''}
+    <p class="help" style="margin-bottom:10px">数と計算にまつわる豆知識を集める図鑑。レベルアップ（2つごと）・実績解除・正解数の節目・7日連続で手に入る。</p>
+    ${hidSec}${sec('SR','⭐ 超レア')}${sec('R','🔹 レア')}${sec('N','・ ふつう')}`;
+}
+
+/* ===== ゲーム ===== */
+let g=null;
+let cfg={diff:2,ops:['add','sub','mul','div'],count:100};
+function openMode(mid){
+  const m=modeOf(mid);
+  if(!m.opt)return start(mid);
+  if(!state.cfg)state.cfg={};
+  const saved=state.cfg[mid]||{};
+  cfg={diff:saved.diff||2, ops:saved.ops||['add','sub','mul','div'], count:saved.count||m.count};
+  g0=m; renderSetup(m);
+}
+function renderSetup(m){
+  const full=m.opt==='full';
+  const counts=full?[30,50,100]:[10,20,30,50];
+  screen_.innerHTML=`
+    <button class="back" onclick="renderHome()">‹ もどる</button>
+    <div class="qhead"><h2>${m.i} ${m.n}</h2></div>
+    <div class="label">📊 むずかしさ</div>
+    <div class="opts">${DIFF.map(d=>
+      `<button class="opt ${cfg.diff===d.v?'on':''}" onclick="setDiff(${d.v})">
+        <b>${d.n}</b><i>${d.d}</i></button>`).join('')}</div>
+    ${full?`<div class="label">🧮 どの計算を出す？</div>
+    <div class="opts4">${OPS.map(o=>
+      `<button class="opt ${cfg.ops.includes(o.v)?'on':''}" onclick="toggleOp('${o.v}')">
+        <b style="font-family:Poppins;font-size:18px">${o.e}</b><i>${o.n}</i></button>`).join('')}</div>
+    <p class="help">1つ以上えらんでください。</p>`:''}
+    <div class="label">🔢 何問やる？</div>
+    <div class="opts4">${counts.map(c=>
+      `<button class="opt ${cfg.count===c?'on':''}" onclick="setCount(${c})"><b>${c}</b><i>問</i></button>`).join('')}</div>
+    <button class="btn btn-primary" style="margin-top:16px" onclick="start('${m.id}')">はじめる ›</button>`;
+}
+function setDiff(v){cfg.diff=v;renderSetup(g0);}
+function toggleOp(v){
+  const i=cfg.ops.indexOf(v);
+  if(i>=0){ if(cfg.ops.length<=1){toast('1つ以上えらんでください');return;} cfg.ops.splice(i,1); }
+  else cfg.ops.push(v);
+  renderSetup(g0);
+}
+function setCount(c){cfg.count=c;renderSetup(g0);}
+let g0=null;
+function start(mid){
+  const m=modeOf(mid);
+  if(!state.stat.modes)state.stat.modes=[];
+  if(!state.stat.modes.includes(mid))state.stat.modes.push(mid);
+  touchStreak();
+  const cnt=(m.opt?cfg.count:m.count);
+  if(m.opt){
+    if(!state.cfg)state.cfg={};
+    state.cfg[mid]={diff:cfg.diff,ops:cfg.ops.slice(),count:cfg.count};save();
+  }
+  g={m:Object.assign({},m,{count:cnt}),i:0,score:0,combo:0,maxCombo:0,miss:[],
+     buf:'',answered:false,t0:Date.now(),cur:null,diff:cfg.diff,ops:cfg.ops.slice()};
+  next();
+}
+function next(){
+  if(g.i>=g.m.count)return finish();
+  g.cur=g.m.mk(g.diff,g.ops);g.buf='';g.answered=false;
+  render();
+}
+function key(k){
+  if(g.answered)return;
+  if(k==='del'){g.buf=g.buf.slice(0,-1);}
+  else if(k==='-'){g.buf=g.buf.startsWith('-')?g.buf.slice(1):'-'+g.buf;}
+  else if(k==='go'){return submit();}
+  else{ if(g.buf.replace('-','').length<6)g.buf+=k; }
+  render();
+}
+function submit(){
+  if(g.answered||g.buf===''||g.buf==='-')return;
+  g.answered=true;
+  const v=parseInt(g.buf,10),ok=v===g.cur.a;
+  bumpQ();state.total++;
+  if(ok){
+    g.score++;g.combo++;g.maxCombo=Math.max(g.maxCombo,g.combo);
+    state.correct++;addXp(3+Math.min(7,Math.floor(g.combo/5)));
+    if(g.combo>=10)unlock('combo10');
+    if(g.combo>=30)unlock('combo30');
+    if(g.combo>=50)unlock('combo50');
+    delete state.wrong[g.cur.q];
+    setTimeout(checkCardMilestone,60);
+    pop(8);
+  }else{
+    g.combo=0;g.miss.push(g.cur);
+    state.wrong[g.cur.q]=g.cur.a;
+    pop(30);
+  }
+  save();checkAch();render();
+  setTimeout(()=>{g.i++;next();},ok?450:1600);
+}
+function render(){
+  const m=g.m,q=g.cur;
+  const pct=Math.round(g.i/m.count*100);
+  const big=q.q.length>14?'qtext sm':'qtext';
+  const shown=g.answered?(g.buf||'—'):(g.buf||'');
+  const cls=g.answered?(parseInt(g.buf,10)===q.a?'ansbox ok':'ansbox ng'):'ansbox';
+  screen_.innerHTML=`
+    <button class="back" onclick="quit()">‹ やめる</button>
+    <div class="qhead"><h2>${m.i} ${m.n}</h2>
+      <span class="qmeta">${g.i+1} / ${m.count}　${g.combo>=3?'🔥'+g.combo:''}</span></div>
+    <div class="bar"><i style="width:${pct}%"></i></div>
+    <div class="qbox">
+      <div class="${big}">${q.q}</div>
+      ${q.hint&&!g.answered?`<div class="qhint">💡 ${q.hint}</div>`:''}
+      <div class="${cls}">${shown}${g.answered?'':'<span class="cursor"></span>'}</div>
+    </div>
+    ${g.answered?fb():(q.choices?choicePad(q):pad())}`;
+}
+function choicePad(q){
+  return `<div style="display:grid;gap:8px">${q.choices.map(c=>
+    `<button class="btn btn-ghost" style="font-family:Poppins;font-size:18px" onclick="answerChoice(${c})">${c.toLocaleString()}</button>`).join('')}</div>`;
+}
+function answerChoice(v){
+  if(g.answered)return;
+  g.buf=String(v);
+  submit();
+}
+function pad(){
+  const k=(v,l,c)=>`<button class="${c||''}" onclick="key('${v}')">${l}</button>`;
+  return `<div class="pad">
+    ${k('7','7')}${k('8','8')}${k('9','9')}
+    ${k('4','4')}${k('5','5')}${k('6','6')}
+    ${k('1','1')}${k('2','2')}${k('3','3')}
+    ${k('-','±','fn')}${k('0','0')}${k('del','⌫','fn')}
+    </div>
+    <button class="btn btn-primary" style="margin-top:8px" onclick="key('go')">こたえる</button>`;
+}
+function fb(){
+  const q=g.cur,ok=parseInt(g.buf,10)===q.a;
+  return `<div class="fb ${ok?'ok':'ng'}">${ok?'⭕ 正解':'❌ 正解は '+q.a.toLocaleString()}
+    ${!ok&&q.hint?`<span class="tip">💡 ${q.hint}</span>`:''}</div>`;
+}
+function quit(){ if(g&&g.i>0)save(); g=null; renderHome(); }
+function finish(){
+  const m=g.m,total=m.count,rate=Math.round(g.score/total*100);
+  const sec=Math.round((Date.now()-g.t0)/1000);
+  const rank=rate>=95?'S':rate>=85?'A':rate>=70?'B':rate>=50?'C':'D';
+  const key=m.opt?`${m.id}_d${g.diff}_${total}`:m.id;
+  const prev=state.best[key]||{score:0,sec:99999};
+  if(g.score>prev.score||(g.score===prev.score&&sec<prev.sec)){
+    state.best[key]={score:g.score,sec};
+  }
+  unlock('first');
+  if(m.id==='drill'){
+    unlock('drill1');
+    if(g.score>=90)unlock('drill90');
+    if(g.score===total){unlock('drill100');}
+    if(g.score===total&&sec<=300)unlock('speed');
+  }
+  if(g.score===total&&['kuku','hosu','seifu','kufuu'].includes(m.id))unlock(m.id);
+  addXp(rate>=95?30:rate>=85?20:10);
+  save();checkAch();
+  const mm=Math.floor(sec/60),ss=String(sec%60).padStart(2,'0');
+  screen_.innerHTML=`
+    <button class="back" onclick="renderHome()">‹ もどる</button>
+    <div class="card">
+      <div class="rank">${rank}</div>
+      <div style="text-align:center;font-size:14px;font-weight:800;margin-bottom:14px">
+        ${g.score} / ${total} 問正解</div>
+      <div class="rline"><span>正答率</span><span>${rate}%</span></div>
+      <div class="rline"><span>かかった時間</span><span>${mm}分${ss}秒</span></div>
+      <div class="rline"><span>1問あたり</span><span>${(sec/total).toFixed(1)}秒</span></div>
+      <div class="rline"><span>最大れんぞく正解</span><span>${g.maxCombo}</span></div>
+      <div class="rline"><span>自己ベスト</span><span>${state.best[key].score}問</span></div>
+    </div>
+    ${g.miss.length?`<div class="label">まちがえた問題（${g.miss.length}）</div>
+      <div class="card">${g.miss.slice(0,12).map(x=>
+        `<div class="rec"><span>${x.q}</span><b>${x.a}</b></div>`).join('')}
+      ${g.miss.length>12?`<p class="help" style="margin-top:8px">ほか ${g.miss.length-12} 問</p>`:''}</div>`:''}
+    <div class="row2">
+      <button class="btn btn-primary" onclick="${m.opt?`openMode('${m.id}')`:`start('${m.id}')`}">もう一度</button>
+      <button class="btn btn-ghost" onclick="renderHome()">ホームへ</button>
+    </div>`;
+}
+
+/* ===== ホーム ===== */
+function renderHome(){
+  const li=lvlInfo(state.xp),t=titleOf(li.level);
+  $('rankPill').textContent='Lv.'+li.level;
+  const wrongN=Object.keys(state.wrong).length;
+  screen_.innerHTML=`
+    <div class="card stat">
+      <svg class="ring" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="40" fill="none" stroke="var(--panel2)" stroke-width="12"/>
+        <circle cx="50" cy="50" r="40" fill="none" stroke="var(--primary)" stroke-width="12"
+          stroke-linecap="round" stroke-dasharray="${2*Math.PI*40}"
+          stroke-dashoffset="${2*Math.PI*40*(1-(li.max?1:li.cur/li.need))}"
+          transform="rotate(-90 50 50)"/>
+        <text x="50" y="56" text-anchor="middle" font-size="22" font-weight="800"
+          fill="var(--primary)" font-family="Poppins">${li.level}</text>
+      </svg>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:800;color:var(--primary)">${t.e} ${t.n}</div>
+        <div style="font-size:11px;color:var(--sub);font-weight:700;margin-top:4px">
+          ${li.max?'最高レベル到達！':'あと '+(li.need-li.cur)+' XP'}</div>
+        <div style="font-size:11px;color:var(--sub);font-weight:700;margin-top:2px">
+          累計 ${state.correct.toLocaleString()} 問正解${state.streak.count>=2?'　🔥'+state.streak.count+'日連続':''}</div>
+      </div>
+    </div>
+
+    <button class="btn btn-ghost" style="margin-top:12px;display:flex;justify-content:space-between;align-items:center" onclick="renderZukan()">
+      <span>📖 数の図鑑</span>
+      <span style="font-family:Poppins;font-weight:800;color:var(--accent)">${cardsNormal().filter(c=>(state.cards||[]).includes(c.id)).length}/${cardsNormal().length}</span>
+    </button>
+    <div class="label">🧮 トレーニング</div>
+    <div class="modes">
+      ${MODES.map(m=>{const b=state.best[m.id];
+        return `<button class="mode" onclick="${m.opt?`openMode('${m.id}')`:`start('${m.id}')`}">
+          <span class="mi">${m.i}</span>
+          <div class="mn">${m.n}</div>
+          <div class="md">${m.d}</div>
+          ${(()=>{const c=(state.cfg&&state.cfg[m.id])||{};
+          const k=m.opt?`${m.id}_d${c.diff||2}_${c.count||m.count}`:m.id;
+          const bb=state.best[k];
+          const dn=m.opt&&c.diff?(DIFF.find(x=>x.v===c.diff)||{}).n:'';
+          return bb?`<div class="mb">${dn?dn+' ':''}ベスト ${bb.score}/${c.count||m.count}</div>`:'';})()}
+        </button>`;}).join('')}
+    </div>
+
+    ${wrongN?`<button class="btn btn-accent" style="margin-top:12px" onclick="startWrong()">
+      ⚠️ まちがえた問題をやり直す（${wrongN}問）</button>`:''}
+
+    <div class="label">🏅 実績（${ACH.filter(a=>state.ach.includes(a.id)).length}/${ACH.length}）</div>
+    <div class="ach-grid">
+      ${ACH.map(a=>{const got=state.ach.includes(a.id);
+        return `<div class="achb ${got?'got':''}"><div class="an">${got?'🏅':'🔒'} ${a.name}</div>
+        <div class="ad">${a.desc}</div></div>`;}).join('')}
+    </div>
+    ${(()=>{const f=ACH_SECRET.filter(a=>state.ach.includes(a.id));
+      return f.length?`<div class="label">🕵️ 隠し実績（${f.length}）</div><div class="ach-grid">${
+        f.map(a=>`<div class="achb got" style="border-color:#5A68D8"><div class="an">🕵️ ${a.name}</div>
+        <div class="ad">${a.desc}</div></div>`).join('')}</div>`:'';})()}
+
+    <div class="row2" style="margin-top:16px">
+      <button class="btn btn-ghost" style="font-size:12px;padding:11px" onclick="checkUpdate(false)">🔄 更新を確認</button>
+      <button class="btn btn-ghost" style="font-size:12px;padding:11px" onclick="renderBackup()">💾 記録の保存</button>
+    </div>
+    <p class="help" style="text-align:center;margin-top:8px;opacity:.6">バージョン ${APP_VER}</p>`;
+}
+function startWrong(){
+  const ks=Object.keys(state.wrong);
+  if(!ks.length){toast('まちがえた問題はありません');return;}
+  const list=ks.slice(0,30).map(q=>({q,a:state.wrong[q]}));
+  g={m:{id:'wrong',i:'⚠️',n:'まちがえた問題',count:list.length,mk:null},
+     i:0,score:0,combo:0,maxCombo:0,miss:[],buf:'',answered:false,t0:Date.now(),cur:null,list};
+  g.m.mk=()=>g.list[g.i];
+  next();
+}
+
+/* ===== 更新・バックアップ ===== */
+function forceUpdate(){ location.replace(location.origin+location.pathname+'?v='+Date.now()); }
+async function checkUpdate(silent){
+  try{
+    const r=await fetch(location.origin+location.pathname+'?c='+Date.now(),{cache:'no-store'});
+    const t=await r.text();
+    const m=t.match(/const APP_VER='([^']+)'/);
+    if(m&&m[1]!==APP_VER){
+      const bar=$('updBar');
+      if(bar){bar.style.display='flex';bar.querySelector('b').textContent='新しいバージョン '+m[1]+' があります';}
+      return true;
+    }
+    if(!silent)toast('最新版です（'+APP_VER+'）');
+    return false;
+  }catch(e){ if(!silent)toast('確認できませんでした'); return false; }
+}
+function exportProgress(){
+  return JSON.stringify({app:'mathup',v:1,ver:APP_VER,d:{
+    xp:state.xp,ach:state.ach,best:state.best,total:state.total,
+    correct:state.correct,streak:state.streak,stat:state.stat,wrong:state.wrong,
+    cards:state.cards,cardMile:state.cardMile}});
+}
+function copyProgress(){
+  const t=exportProgress();
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(()=>toast('コピーしました ✓')).catch(selCopy);
+  }else selCopy();
+}
+function selCopy(){
+  const el=$('bkText'); if(!el)return;
+  el.removeAttribute('readonly');el.select();el.setSelectionRange(0,999999);
+  try{document.execCommand('copy');toast('コピーしました ✓');}
+  catch(e){toast('長押しして手動でコピーしてください');}
+  el.setAttribute('readonly','');
+}
+function importProgress(){
+  const raw=($('impText')||{}).value||'';
+  if(!raw.trim()){toast('貼り付けてから読み込んでください');return;}
+  let o;try{o=JSON.parse(raw.trim());}catch(e){toast('形式が正しくありません');return;}
+  const d=o&&o.d?o.d:null;
+  if(!d){toast('記録が見つかりません');return;}
+  if(o.app&&o.app!=='mathup'){toast('MATH UP! の記録ではありません');return;}
+  if(!confirm('いまの記録を置きかえます。よろしいですか？'))return;
+  state.xp=d.xp||0;state.ach=d.ach||[];state.best=d.best||{};
+  state.total=d.total||0;state.correct=d.correct||0;
+  state.streak=d.streak||{day:'',count:0};
+  if(d.stat)state.stat=d.stat;
+  state.wrong=d.wrong||{};
+  state.cards=d.cards||[];state.cardMile=d.cardMile||0;
+  save();toast('記録を復元しました ✓');renderHome();
+}
+function renderBackup(){
+  screen_.innerHTML=`
+    <button class="back" onclick="renderHome()">‹ もどる</button>
+    <div class="qhead"><h2>💾 記録の保存</h2></div>
+    <p class="help" style="margin-bottom:12px">記録はこの端末の中だけに保存されています。機種変更のときや、ホーム画面のアイコンを入れ直すときは、ここで書き出して持ち出せます。</p>
+    <div class="card">
+      <div style="font-size:12px;color:var(--sub);font-weight:700;margin-bottom:8px">
+        いまの記録（Lv.${lvlInfo(state.xp).level} / ${state.correct.toLocaleString()}問正解）</div>
+      <textarea id="bkText" readonly style="min-height:110px">${exportProgress()}</textarea>
+      <button class="btn btn-primary" style="margin-top:10px" onclick="copyProgress()">📋 コピーする</button>
+    </div>
+    <p class="help" style="margin:14px 0 8px">▼ 別の端末で復元する場合は、ここに貼り付けます。</p>
+    <div class="card">
+      <textarea id="impText" placeholder="ここに貼り付け" style="min-height:90px"></textarea>
+      <button class="btn btn-ghost" style="margin-top:10px" onclick="importProgress()">読み込む</button>
+    </div>`;
+}
+
+renderHome();
+setTimeout(()=>checkUpdate(true),1800);
+</script>
+</body>
+</html>

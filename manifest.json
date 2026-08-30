@@ -1,0 +1,17 @@
+{
+  "name": "MATH UP! 計算トレーニング",
+  "short_name": "MATH UP!",
+  "description": "加減乗除の100本ノック、九九の逆引き、補数、正負の数、工夫して計算、概算。暗算力をきたえる8つのモード。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F1F8F4",
+  "theme_color": "#1E7A5A",
+  "lang": "ja",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
