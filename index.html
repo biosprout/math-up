@@ -177,7 +177,7 @@
 
 <script>
 const STORE_KEY='mathup_v1';
-const APP_VER='20260830h';
+const APP_VER='20260830k';
 const $=id=>document.getElementById(id);
 const screen_=$('screen');
 const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
@@ -469,7 +469,7 @@ function grantCard(){
     const dup=cnt[c.id]>1;
     const msg=isHidden
       ? '🔮 隠し図鑑を発見！ '+c.e+' '+c.n+(dup?'（重複 ×'+cnt[c.id]+'）':'')
-      : '🔮 隠し図鑑を発見！ '+c.e+' '+c.n+(dup?'（重複 ×'+cnt[c.id]+'）':(c.r==='SR'?'（超レア！）':c.r==='R'?'（レア）':''));
+      : '📖 図鑑に追加: '+c.e+' '+c.n+(dup?'（重複 ×'+cnt[c.id]+'）':(c.r==='SR'?'（超レア！）':c.r==='R'?'（レア）':''));
     setTimeout(()=>{toast(msg);pop(dup?6:20);},1400);
   };
   const hid=CARDS.filter(c=>c.r==='H');
@@ -758,9 +758,11 @@ function renderHome(){
       <div style="flex:1">
         <div style="font-size:13px;font-weight:800;color:var(--primary)">${t.e} ${t.n}</div>
         <div style="font-size:11px;color:var(--sub);font-weight:700;margin-top:4px">
-          ${li.max?'最高レベル到達！':'あと '+(li.need-li.cur)+' XP'}　<span style="color:var(--accent)">称号の記録 ›</span></div>
+          ${li.max?'最高レベル到達！':'あと '+(li.need-li.cur)+' XP'}</div>
         <div style="font-size:11px;color:var(--sub);font-weight:700;margin-top:2px">
-          累計 ${state.correct.toLocaleString()} 問正解${state.streak.count>=2?'　🔥'+state.streak.count+'日連続':''}</div>
+          ${state.streak.count>=2?'🔥 '+state.streak.count+'日連続　':''}<span style="color:var(--accent)">称号の記録 ›</span></div>
+        <div style="font-size:11px;color:var(--sub);font-weight:700;margin-top:2px">
+          累計 ${state.correct.toLocaleString()} 問正解</div>
       </div>
     </div>
 
@@ -814,9 +816,9 @@ function renderHome(){
         f.map(a=>`<div class="achb got" style="border-color:#5A68D8"><div class="an">🕵️ ${a.name}</div>
         <div class="ad">${a.desc}</div></div>`).join('')}</div>`:'';})()}
 
-    <div class="row2" style="margin-top:16px">
-      <button class="btn btn-ghost" style="font-size:12px;padding:11px" onclick="checkUpdate(false)">🔄 更新を確認</button>
-      <button class="btn btn-ghost" style="font-size:12px;padding:11px" onclick="renderBackup()">💾 記録の保存</button>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-ghost" style="flex:1;font-size:12px;padding:11px" onclick="checkUpdate(false)">🔄 更新を確認</button>
+      <button class="btn btn-ghost" style="flex:1;font-size:12px;padding:11px" onclick="renderBackup()">💾 記録の保存</button>
     </div>
     <p class="help" style="text-align:center;margin-top:8px;opacity:.6">バージョン ${APP_VER}</p>`;
 }
