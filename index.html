@@ -139,6 +139,7 @@
   .zkn{font-size:13px;font-weight:800;line-height:1.35}
   .zkd{font-size:11px;color:var(--sub);font-weight:500;line-height:1.65;margin-top:4px}
   .zktag{display:inline-block;font-size:9.5px;font-weight:800;border-radius:6px;padding:1px 6px;margin-left:4px;vertical-align:1px}
+  .dupn{font-family:Poppins;font-size:10px;font-weight:800;color:var(--accent);margin-left:2px}
   .zktag.N{background:var(--panel2);color:var(--sub)}
   .zktag.R{background:#DCEEF9;color:#1F6FA8}
   .zktag.SR{background:#FBEFD8;color:#A87415}
@@ -176,7 +177,7 @@
 
 <script>
 const STORE_KEY='mathup_v1';
-const APP_VER='20260830g';
+const APP_VER='20260830h';
 const $=id=>document.getElementById(id);
 const screen_=$('screen');
 const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
@@ -283,6 +284,10 @@ if(!state.best)state.best={};
 if(!state.stat)state.stat={day:'',dayQ:0,modes:[]};
 if(!state.wrong)state.wrong={};
 if(!state.cards)state.cards=[];
+if(!state.cardCount){
+  state.cardCount={};
+  (state.cards||[]).forEach(id=>{state.cardCount[id]=(state.cardCount[id]||0)+1;});
+}
 if(state.cardMile==null)state.cardMile=0;
 
 const MAXLV=20;
@@ -386,11 +391,11 @@ function checkAch(){
   if(lv>=20)unlock('lv20');
   if((state.stat.modes||[]).length>=MODES.length)unlock('allmode');
   if(Object.keys(state.wrong).length===0&&state.total>50)unlock('comeback');
-  const cn=cardsNormal().filter(c=>(state.cards||[]).includes(c.id)).length;
+  const cn=cardsNormal().filter(c=>(state.cardCount||{})[c.id]>0).length;
   if(cn>=10)unlock('cards10');
   if(cn>=25)unlock('cards25');
   if(cn>=cardsNormal().length)unlock('cardsall');
-  if(CARDS.some(c=>c.r==='H'&&(state.cards||[]).includes(c.id)))unlock('secret');
+  if(CARDS.some(c=>c.r==='H'&&(state.cardCount||{})[c.id]>0))unlock('secret');
 }
 
 
@@ -443,22 +448,40 @@ const CARDS=[
 ];
 function cardsNormal(){return CARDS.filter(c=>c.r!=='H');}
 function grantCard(){
-  const have=new Set(state.cards||[]);
-  const hid=CARDS.filter(c=>c.r==='H'&&!have.has(c.id));
+  const cnt=state.cardCount||(state.cardCount={});
+  const owned=id=>(cnt[id]||0)>0;
+  // 未所持は重み3倍。重複も出るが新規が出やすい
+  const W={N:6,R:3,SR:1,H:0};
+  const build=arr=>{
+    let tot=0; const w=arr.map(c=>{const v=(W[c.r]||1)*(owned(c.id)?1:3); tot+=v; return v;});
+    return {arr,w,tot};
+  };
+  const draw=pool=>{
+    const {arr,w,tot}=build(pool);
+    let x=Math.random()*tot;
+    for(let i=0;i<arr.length;i++){x-=w[i];if(x<=0)return arr[i];}
+    return arr[arr.length-1];
+  };
+  const give=(c,isHidden)=>{
+    cnt[c.id]=(cnt[c.id]||0)+1;
+    if(!state.cards.includes(c.id))state.cards.push(c.id);
+    save();
+    const dup=cnt[c.id]>1;
+    const msg=isHidden
+      ? '🔮 隠し図鑑を発見！ '+c.e+' '+c.n+(dup?'（重複 ×'+cnt[c.id]+'）':'')
+      : '🔮 隠し図鑑を発見！ '+c.e+' '+c.n+(dup?'（重複 ×'+cnt[c.id]+'）':(c.r==='SR'?'（超レア！）':c.r==='R'?'（レア）':''));
+    setTimeout(()=>{toast(msg);pop(dup?6:20);},1400);
+  };
+  const hid=CARDS.filter(c=>c.r==='H');
+  const newHid=hid.filter(c=>!owned(c.id));
   if(hid.length&&Math.random()<0.04){
-    const pk=hid[Math.floor(Math.random()*hid.length)];
-    state.cards.push(pk.id);save();
-    setTimeout(()=>{toast('🔮 隠し図鑑を発見！ '+pk.e+' '+pk.n);pop(20);},1200);
+    give(newHid.length?newHid[Math.floor(Math.random()*newHid.length)]
+                      :hid[Math.floor(Math.random()*hid.length)],true);
     return;
   }
-  const pool=CARDS.filter(c=>c.r!=='H'&&!have.has(c.id));
+  const pool=CARDS.filter(c=>c.r!=='H');
   if(!pool.length)return;
-  const W={N:6,R:3,SR:1};
-  let tot=0;pool.forEach(c=>tot+=W[c.r]);
-  let x=Math.random()*tot,pk=pool[0];
-  for(const c of pool){x-=W[c.r];if(x<=0){pk=c;break;}}
-  state.cards.push(pk.id);save();
-  setTimeout(()=>{toast('📖 図鑑に追加: '+pk.e+' '+pk.n+(pk.r==='SR'?'（超レア！）':pk.r==='R'?'（レア）':''));pop(10);},1200);
+  give(draw(pool),false);
 }
 function checkCardMilestone(){
   if(!state.cardMile)state.cardMile=0;
@@ -486,19 +509,19 @@ function renderTitles(){
     <button class="btn btn-ghost" style="margin-top:10px" onclick="renderHome()">ホームに戻る</button>`;
 }
 function renderZukan(){
-  const have=new Set(state.cards||[]);
+  const have=new Set(CARDS.filter(c=>(state.cardCount||{})[c.id]>0).map(c=>c.id));
   const norm=cardsNormal();
   const got=norm.filter(c=>have.has(c.id)).length;
   const sec=(r,label)=>{
     const cs=CARDS.filter(c=>c.r===r);
     return `<div class="label">${label}（${cs.filter(c=>have.has(c.id)).length}/${cs.length}）</div>`+
       cs.map(c=>have.has(c.id)
-        ?`<div class="zkr got"><span class="zke">${c.e}</span><div class="zkb"><div class="zkn">${c.n} <span class="zktag ${c.r}">${c.r==='SR'?'超レア':c.r==='R'?'レア':'ふつう'}</span></div><div class="zkd">${c.d}</div></div></div>`
+        ?`<div class="zkr got"><span class="zke">${c.e}</span><div class="zkb"><div class="zkn">${c.n}${(state.cardCount&&state.cardCount[c.id]>1)?` <span class="dupn">×${state.cardCount[c.id]}</span>`:''} <span class="zktag ${c.r}">${c.r==='SR'?'超レア':c.r==='R'?'レア':'ふつう'}</span></div><div class="zkd">${c.d}</div></div></div>`
         :`<div class="zkr"><span class="zke">🔒</span><div class="zkb"><div class="zkn" style="color:var(--sub)">？？？</div><div class="zkd">レベルアップ・実績・正解数の節目で手に入る</div></div></div>`).join('');
   };
-  const hid=CARDS.filter(c=>c.r==='H'&&have.has(c.id));
+  const hid=CARDS.filter(c=>c.r==='H'&&(state.cardCount||{})[c.id]>0);
   const hidSec=hid.length?`<div class="label">🔮 隠し図鑑（${hid.length}）</div>`+
-    hid.map(c=>`<div class="zkr got" style="border-color:#5A68D8"><span class="zke">${c.e}</span><div class="zkb"><div class="zkn">${c.n} <span class="zktag H">隠し</span></div><div class="zkd">${c.d}</div></div></div>`).join(''):'';
+    hid.map(c=>`<div class="zkr got" style="border-color:#5A68D8"><span class="zke">${c.e}</span><div class="zkb"><div class="zkn">${c.n}${(state.cardCount&&state.cardCount[c.id]>1)?` <span class="dupn">×${state.cardCount[c.id]}</span>`:''} <span class="zktag H">隠し</span></div><div class="zkd">${c.d}</div></div></div>`).join(''):'';
   screen_.innerHTML=`
     <button class="back" onclick="renderHome()">‹ もどる</button>
     <div class="qhead"><h2>📖 数の図鑑</h2><span class="qmeta">${got}/${norm.length} 発見</span></div>
@@ -743,7 +766,7 @@ function renderHome(){
 
     <button class="btn btn-ghost" style="margin-top:12px;display:flex;justify-content:space-between;align-items:center" onclick="renderZukan()">
       <span>📖 数の図鑑</span>
-      <span style="font-family:Poppins;font-weight:800;color:var(--accent)">${cardsNormal().filter(c=>(state.cards||[]).includes(c.id)).length}/${cardsNormal().length}</span>
+      <span style="font-family:Poppins;font-weight:800;color:var(--accent)">${cardsNormal().filter(c=>(state.cardCount||{})[c.id]>0).length}/${cardsNormal().length}</span>
     </button>
     <div class="label">🧮 トレーニング</div>
     <div class="modes">
@@ -828,7 +851,7 @@ function exportProgress(){
   return JSON.stringify({app:'mathup',v:1,ver:APP_VER,d:{
     xp:state.xp,ach:state.ach,best:state.best,total:state.total,
     correct:state.correct,streak:state.streak,stat:state.stat,wrong:state.wrong,
-    cards:state.cards,cardMile:state.cardMile,cfg:state.cfg}});
+    cards:state.cards,cardCount:state.cardCount,cardMile:state.cardMile,cfg:state.cfg}});
 }
 function copyProgress(){
   const t=exportProgress();
@@ -856,7 +879,7 @@ function importProgress(){
   state.streak=d.streak||{day:'',count:0};
   if(d.stat)state.stat=d.stat;
   state.wrong=d.wrong||{};
-  state.cards=d.cards||[];state.cardMile=d.cardMile||0;
+  state.cards=d.cards||[];state.cardCount=d.cardCount||{};state.cardMile=d.cardMile||0;
   state.cfg=d.cfg||{};
   save();toast('記録を復元しました ✓');renderHome();
 }
