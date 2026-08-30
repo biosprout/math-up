@@ -166,7 +166,7 @@
 
 <script>
 const STORE_KEY='mathup_v1';
-const APP_VER='20260830c';
+const APP_VER='20260830d';
 const $=id=>document.getElementById(id);
 const screen_=$('screen');
 const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
@@ -188,6 +188,7 @@ const MODES=[
  {id:'seifu', i:'±',  n:'正負の数', d:'符号のミスをなくす（中1）', mk:mkSeifu, count:30},
  {id:'kufuu', i:'💡', n:'工夫して計算', d:'分けたり寄せたりして速く解く', mk:mkKufuu, count:20},
  {id:'gaisan',i:'📏', n:'概算', d:'およその大きさをつかむ', mk:mkGaisan, count:15},
+ {id:'ta',    i:'⏱', n:'タイムアタック', d:'60秒で何問解けるか', mk:mkDrill, count:999, opt:'full', ta:true},
 ];
 function modeOf(id){return MODES.find(m=>m.id===id);}
 
@@ -304,6 +305,9 @@ const ACH=[
  {id:'combo10',name:'10連続',desc:'10問連続で正解'},
  {id:'combo30',name:'30連続',desc:'30問連続で正解'},
  {id:'combo50',name:'50連続',desc:'50問連続で正解'},
+ {id:'ta20',name:'速算',desc:'タイムアタックで20問正解'},
+ {id:'ta30',name:'高速演算',desc:'タイムアタックで30問正解'},
+ {id:'ta40',name:'電卓いらず',desc:'タイムアタックで40問正解'},
  {id:'allmode',name:'全モード制覇',desc:'8つのモードすべてを試す'},
  {id:'kuku',name:'九九マスター',desc:'九九の逆引きで全問正解'},
  {id:'hosu',name:'補数の達人',desc:'補数で全問正解'},
@@ -478,12 +482,13 @@ function openMode(mid){
   if(!m.opt)return start(mid);
   if(!state.cfg)state.cfg={};
   const saved=state.cfg[mid]||{};
-  cfg={diff:saved.diff||2, ops:saved.ops||['add','sub','mul','div'], count:saved.count||m.count};
+  const defCount=m.ta?60:m.count;
+  cfg={diff:saved.diff||2, ops:saved.ops||['add','sub','mul','div'], count:saved.count||defCount};
   g0=m; renderSetup(m);
 }
 function renderSetup(m){
   const full=m.opt==='full';
-  const counts=full?[30,50,100]:[10,20,30,50];
+  const counts=m.ta?[60,90,120]:(full?[30,50,100]:[10,20,30,50]);
   screen_.innerHTML=`
     <button class="back" onclick="renderHome()">‹ もどる</button>
     <div class="qhead"><h2>${m.i} ${m.n}</h2></div>
@@ -496,9 +501,9 @@ function renderSetup(m){
       `<button class="opt ${cfg.ops.includes(o.v)?'on':''}" onclick="toggleOp('${o.v}')">
         <b style="font-family:Poppins;font-size:18px">${o.e}</b><i>${o.n}</i></button>`).join('')}</div>
     <p class="help">1つ以上えらんでください。</p>`:''}
-    <div class="label">🔢 何問やる？</div>
+    <div class="label">${m.ta?'⏱ 制限時間':'🔢 何問やる？'}</div>
     <div class="opts4">${counts.map(c=>
-      `<button class="opt ${cfg.count===c?'on':''}" onclick="setCount(${c})"><b>${c}</b><i>問</i></button>`).join('')}</div>
+      `<button class="opt ${cfg.count===c?'on':''}" onclick="setCount(${c})"><b>${c}</b><i>${m.ta?'秒':'問'}</i></button>`).join('')}</div>
     <button class="btn btn-primary" style="margin-top:16px" onclick="start('${m.id}')">はじめる ›</button>`;
 }
 function setDiff(v){cfg.diff=v;renderSetup(g0);}
@@ -520,9 +525,21 @@ function start(mid){
     if(!state.cfg)state.cfg={};
     state.cfg[mid]={diff:cfg.diff,ops:cfg.ops.slice(),count:cfg.count};save();
   }
-  g={m:Object.assign({},m,{count:cnt}),i:0,score:0,combo:0,maxCombo:0,miss:[],
-     buf:'',answered:false,t0:Date.now(),cur:null,diff:cfg.diff,ops:cfg.ops.slice()};
+  g={m:Object.assign({},m,{count:m.ta?999:cnt}),i:0,score:0,combo:0,maxCombo:0,miss:[],
+     buf:'',answered:false,t0:Date.now(),cur:null,diff:cfg.diff,ops:cfg.ops.slice(),
+     ta:!!m.ta, t:m.ta?cnt:0, limit:m.ta?cnt:0, timer:null};
   next();
+  if(g.ta)startTimer();
+}
+function startTimer(){
+  clearInterval(g.timer);
+  g.timer=setInterval(()=>{
+    if(!g||!g.ta)return clearInterval(g.timer);
+    g.t--;
+    const el=$('tm');
+    if(el){el.textContent=g.t+'秒';if(g.t<=10)el.style.color='var(--danger)';}
+    if(g.t<=0){clearInterval(g.timer);g.answered=true;finish();}
+  },1000);
 }
 function next(){
   if(g.i>=g.m.count)return finish();
@@ -568,8 +585,8 @@ function render(){
   screen_.innerHTML=`
     <button class="back" onclick="quit()">‹ やめる</button>
     <div class="qhead"><h2>${m.i} ${m.n}</h2>
-      <span class="qmeta">${g.i+1} / ${m.count}　${g.combo>=3?'🔥'+g.combo:''}</span></div>
-    <div class="bar"><i style="width:${pct}%"></i></div>
+      <span class="qmeta">${g.ta?`<span id="tm">${g.t}秒</span>　${g.score}問`:`${g.i+1} / ${m.count}`}　${g.combo>=3?'🔥'+g.combo:''}</span></div>
+    <div class="bar"><i style="width:${g.ta?Math.max(0,g.t/g.limit*100):pct}%"></i></div>
     <div class="qbox">
       <div class="${big}">${q.q}</div>
       ${q.hint&&!g.answered?`<div class="qhint">💡 ${q.hint}</div>`:''}
@@ -601,15 +618,26 @@ function fb(){
   return `<div class="fb ${ok?'ok':'ng'}">${ok?'⭕ 正解':'❌ 正解は '+q.a.toLocaleString()}
     ${!ok&&q.hint?`<span class="tip">💡 ${q.hint}</span>`:''}</div>`;
 }
-function quit(){ if(g&&g.i>0)save(); g=null; renderHome(); }
+function quit(){ if(g){clearInterval(g.timer); if(g.i>0)save();} g=null; renderHome(); }
 function finish(){
-  const m=g.m,total=m.count,rate=Math.round(g.score/total*100);
-  const sec=Math.round((Date.now()-g.t0)/1000);
-  const rank=rate>=95?'S':rate>=85?'A':rate>=70?'B':rate>=50?'C':'D';
-  const key=m.opt?`${m.id}_d${g.diff}_${total}`:m.id;
+  if(g.timer)clearInterval(g.timer);
+  const m=g.m;
+  const total=g.ta?Math.max(1,g.i):m.count;
+  const rate=Math.round(g.score/total*100);
+  const sec=g.ta?g.limit:Math.round((Date.now()-g.t0)/1000);
+  const rank=g.ta
+    ?(g.score>=40?'S':g.score>=30?'A':g.score>=20?'B':g.score>=10?'C':'D')
+    :(rate>=95?'S':rate>=85?'A':rate>=70?'B':rate>=50?'C':'D');
+  const key=g.ta?`ta_d${g.diff}_${g.limit}`:(m.opt?`${m.id}_d${g.diff}_${total}`:m.id);
   const prev=state.best[key]||{score:0,sec:99999};
-  if(g.score>prev.score||(g.score===prev.score&&sec<prev.sec)){
+  if(g.ta){ if(g.score>prev.score)state.best[key]={score:g.score,sec:g.limit}; }
+  else if(g.score>prev.score||(g.score===prev.score&&sec<prev.sec)){
     state.best[key]={score:g.score,sec};
+  }
+  if(g.ta){
+    if(g.score>=20)unlock('ta20');
+    if(g.score>=30)unlock('ta30');
+    if(g.score>=40)unlock('ta40');
   }
   unlock('first');
   if(m.id==='drill'){
@@ -627,10 +655,14 @@ function finish(){
     <div class="card">
       <div class="rank">${rank}</div>
       <div style="text-align:center;font-size:14px;font-weight:800;margin-bottom:14px">
-        ${g.score} / ${total} 問正解</div>
+        ${g.ta?`${g.limit}秒で ${g.score} 問正解`:`${g.score} / ${total} 問正解`}</div>
+      ${g.ta?`
+      <div class="rline"><span>挑戦した問題</span><span>${g.i}問</span></div>
+      <div class="rline"><span>正答率</span><span>${rate}%</span></div>
+      <div class="rline"><span>1問あたり</span><span>${(g.limit/Math.max(1,g.score)).toFixed(1)}秒</span></div>`:`
       <div class="rline"><span>正答率</span><span>${rate}%</span></div>
       <div class="rline"><span>かかった時間</span><span>${mm}分${ss}秒</span></div>
-      <div class="rline"><span>1問あたり</span><span>${(sec/total).toFixed(1)}秒</span></div>
+      <div class="rline"><span>1問あたり</span><span>${(sec/total).toFixed(1)}秒</span></div>`}
       <div class="rline"><span>最大れんぞく正解</span><span>${g.maxCombo}</span></div>
       <div class="rline"><span>自己ベスト</span><span>${state.best[key].score}問</span></div>
     </div>
@@ -681,16 +713,33 @@ function renderHome(){
           <div class="mn">${m.n}</div>
           <div class="md">${m.d}</div>
           ${(()=>{const c=(state.cfg&&state.cfg[m.id])||{};
-          const k=m.opt?`${m.id}_d${c.diff||2}_${c.count||m.count}`:m.id;
+          const def=m.ta?60:m.count;
+          const k=m.opt?`${m.id}_d${c.diff||2}_${c.count||def}`:m.id;
           const bb=state.best[k];
           const dn=m.opt&&c.diff?(DIFF.find(x=>x.v===c.diff)||{}).n:'';
-          return bb?`<div class="mb">${dn?dn+' ':''}ベスト ${bb.score}/${c.count||m.count}</div>`:'';})()}
+          if(!bb)return '';
+          return m.ta
+            ? `<div class="mb">${dn?dn+' ':''}ベスト ${bb.score}問 / ${c.count||def}秒</div>`
+            : `<div class="mb">${dn?dn+' ':''}ベスト ${bb.score}/${c.count||def}</div>`;})()}
         </button>`;}).join('')}
     </div>
 
     ${wrongN?`<button class="btn btn-accent" style="margin-top:12px" onclick="startWrong()">
       ⚠️ まちがえた問題をやり直す（${wrongN}問）</button>`:''}
 
+    ${(()=>{const rows=[];
+      MODES.forEach(m=>{
+        Object.keys(state.best||{}).forEach(k=>{
+          if(k===m.id||k.startsWith(m.id+'_')){
+            const b=state.best[k];
+            const md=k.match(/_d(\d)_(\d+)/);
+            const dn=md?(DIFF.find(x=>x.v===+md[1])||{}).n:'';
+            const unit=m.ta?`${md?md[2]:''}秒で`:'';
+            rows.push(`<div class="rec"><span>${m.i} ${m.n}${dn?'（'+dn+'）':''}</span>
+              <b>${unit}${b.score}${m.ta?'問':'/'+(md?md[2]:m.count)}</b></div>`);
+          }});
+      });
+      return rows.length?`<div class="label">🏆 ベストスコア</div><div class="card">${rows.join('')}</div>`:'';})()}
     <div class="label">🏅 実績（${ACH.filter(a=>state.ach.includes(a.id)).length}/${ACH.length}）</div>
     <div class="ach-grid">
       ${ACH.map(a=>{const got=state.ach.includes(a.id);
@@ -738,7 +787,7 @@ function exportProgress(){
   return JSON.stringify({app:'mathup',v:1,ver:APP_VER,d:{
     xp:state.xp,ach:state.ach,best:state.best,total:state.total,
     correct:state.correct,streak:state.streak,stat:state.stat,wrong:state.wrong,
-    cards:state.cards,cardMile:state.cardMile}});
+    cards:state.cards,cardMile:state.cardMile,cfg:state.cfg}});
 }
 function copyProgress(){
   const t=exportProgress();
@@ -767,6 +816,7 @@ function importProgress(){
   if(d.stat)state.stat=d.stat;
   state.wrong=d.wrong||{};
   state.cards=d.cards||[];state.cardMile=d.cardMile||0;
+  state.cfg=d.cfg||{};
   save();toast('記録を復元しました ✓');renderHome();
 }
 function renderBackup(){
