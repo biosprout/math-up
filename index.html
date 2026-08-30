@@ -121,6 +121,16 @@
   .rec:last-child{border:0}
   .rec b{font-family:'Poppins';color:var(--accent);font-size:13px}
 
+  .evr{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--border);
+    border-radius:14px;padding:11px 13px;margin-bottom:7px;opacity:.45}
+  .evr.got{opacity:1}
+  .evr.cur{border-color:var(--accent);background:#FDF4E4;box-shadow:0 0 0 1.5px var(--accent) inset}
+  .evr .evn{font-family:'Poppins';font-size:11px;font-weight:800;color:var(--sub);width:20px;flex:0 0 auto;text-align:right}
+  .evr .eve{font-size:22px;flex:0 0 auto}
+  .evr .evb{flex:1;min-width:0}
+  .evr .evt{font-size:13px;font-weight:800;line-height:1.35}
+  .evr .evd{font-family:'Poppins';font-size:10px;color:var(--sub);font-weight:700;margin-top:2px}
+  .evr.cur .evd{color:#A87415}
   .zkr{display:flex;align-items:flex-start;gap:11px;background:var(--panel);
     border:1px solid var(--border);border-radius:14px;padding:12px 13px;margin-bottom:7px;opacity:.5}
   .zkr.got{opacity:1}
@@ -166,7 +176,7 @@
 
 <script>
 const STORE_KEY='mathup_v1';
-const APP_VER='20260830e';
+const APP_VER='20260830g';
 const $=id=>document.getElementById(id);
 const screen_=$('screen');
 const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
@@ -295,39 +305,39 @@ const TITLES=[
 function titleOf(l){return TITLES[Math.min(l,TITLES.length)-1];}
 
 const ACH=[
- {id:'first',name:'はじめの一歩',desc:'1回やりきる'},
- {id:'drill1',name:'100本ノック完走',desc:'100本ノックを最後まで'},
- {id:'drill90',name:'90点の壁',desc:'100本ノックで90問以上正解'},
- {id:'drill100',name:'パーフェクト',desc:'100本ノックで全問正解'},
- {id:'q100',name:'百問',desc:'累計100問に正解'},
- {id:'q500',name:'五百問',desc:'累計500問に正解'},
- {id:'q2000',name:'二千問',desc:'累計2000問に正解'},
- {id:'combo10',name:'10連続',desc:'10問連続で正解'},
- {id:'combo30',name:'30連続',desc:'30問連続で正解'},
- {id:'combo50',name:'50連続',desc:'50問連続で正解'},
- {id:'ta20',name:'速算',desc:'タイムアタックで20問正解'},
- {id:'ta30',name:'高速演算',desc:'タイムアタックで30問正解'},
- {id:'ta40',name:'電卓いらず',desc:'タイムアタックで40問正解'},
- {id:'allmode',name:'全モード制覇',desc:'8つのモードすべてを試す'},
- {id:'kuku',name:'九九マスター',desc:'九九の逆引きで全問正解'},
- {id:'hosu',name:'補数の達人',desc:'補数で全問正解'},
- {id:'seifu',name:'符号の番人',desc:'正負の数で全問正解'},
- {id:'kufuu',name:'工夫の名人',desc:'工夫して計算で全問正解'},
- {id:'streak3',name:'3日連続',desc:'3日連続で練習'},
- {id:'streak7',name:'週間皆勤',desc:'7日連続で練習'},
- {id:'streak30',name:'継続の力',desc:'30日連続で練習'},
- {id:'lv10',name:'Lv.10 到達',desc:'レベル10に到達'},
- {id:'lv20',name:'最高レベル',desc:'レベル20に到達'},
- {id:'cards10',name:'収集家',desc:'図鑑を10種あつめる'},
- {id:'cards25',name:'蒐集家',desc:'図鑑を25種あつめる'},
- {id:'cardsall',name:'数の博物館長',desc:'図鑑をコンプリート'},
+ {id:'first',name:'ピタゴラスの一歩',desc:'1回やりきる'},
+ {id:'drill1',name:'ユークリッドの原論',desc:'100本ノックを最後まで'},
+ {id:'drill90',name:'アルキメデスの精度',desc:'100本ノックで90問以上正解'},
+ {id:'drill100',name:'完全数',desc:'100本ノックで全問正解'},
+ {id:'q100',name:'百の位',desc:'累計100問に正解'},
+ {id:'q500',name:'メルセンヌの探索',desc:'累計500問に正解'},
+ {id:'q2000',name:'エラトステネスの篩',desc:'累計2000問に正解'},
+ {id:'combo10',name:'ガウスの少年',desc:'10問連続で正解'},
+ {id:'combo30',name:'フィボナッチの連鎖',desc:'30問連続で正解'},
+ {id:'combo50',name:'オイラーの筆致',desc:'50問連続で正解'},
+ {id:'ta20',name:'ネイピアの短縮',desc:'タイムアタックで20問正解'},
+ {id:'ta30',name:'ラマヌジャンの直感',desc:'タイムアタックで30問正解'},
+ {id:'ta40',name:'計算尺いらず',desc:'タイムアタックで40問正解'},
+ {id:'allmode',name:'デカルトの座標',desc:'8つのモードすべてを試す'},
+ {id:'kuku',name:'九九の逆算者',desc:'九九の逆引きで全問正解'},
+ {id:'hosu',name:'ゼロを見出す者',desc:'補数で全問正解'},
+ {id:'seifu',name:'負の数の理解者',desc:'正負の数で全問正解'},
+ {id:'kufuu',name:'ガウスの工夫',desc:'工夫して計算で全問正解'},
+ {id:'streak3',name:'三日の積み重ね',desc:'3日連続で練習'},
+ {id:'streak7',name:'関孝和の稽古',desc:'7日連続で練習'},
+ {id:'streak30',name:'ニュートンの三十日',desc:'30日連続で練習'},
+ {id:'lv10',name:'半ばの高み',desc:'レベル10に到達'},
+ {id:'lv20',name:'ヒルベルトの高み',desc:'レベル20に到達'},
+ {id:'cards10',name:'和算の心得',desc:'図鑑を10種あつめる'},
+ {id:'cards25',name:'算額の奉納者',desc:'図鑑を25種あつめる'},
+ {id:'cardsall',name:'エルデシュ番号1',desc:'図鑑をコンプリート'},
 ];
 const ACH_SECRET=[
- {id:'nightowl',name:'夜の計算',desc:'深夜0時〜4時に練習した'},
- {id:'earlybird',name:'朝の計算',desc:'早朝5時〜7時に練習した'},
- {id:'marathon',name:'計算マラソン',desc:'1日に200問回答した'},
+ {id:'nightowl',name:'夜半の計算者',desc:'深夜0時〜4時に練習した'},
+ {id:'earlybird',name:'暁の数学者',desc:'早朝5時〜7時に練習した'},
+ {id:'marathon',name:'ポール・エルデシュ',desc:'1日に200問回答した'},
  {id:'speed',name:'電光石火',desc:'100本ノックを5分以内に完走'},
- {id:'comeback',name:'雪辱',desc:'まちがえた問題をすべて正解にする'},
+ {id:'comeback',name:'背理法',desc:'まちがえた問題をすべて正解にする'},
  {id:'secret',name:'数の神秘',desc:'隠し図鑑を手に入れた'},
 ];
 function achAll(){return ACH.concat(ACH_SECRET);}
@@ -425,6 +435,11 @@ const CARDS=[
  {id:'birthday',r:'H',e:'🎂',n:'誕生日のパラドックス',d:'23人集まれば、同じ誕生日の人がいる確率が50%を超える。直感よりずっと少ない人数で起こる'},
  {id:'zero_pow',r:'H',e:'⁰',n:'0乗が1になる理由',d:'2³÷2³=2⁰であり、同時に8÷8=1。指数法則を保つには0乗を1と定めるほかない'},
  {id:'kanji_kazu',r:'H',e:'🈁',n:'大字',d:'契約書で一を壱、十を拾と書くのは、改ざんを防ぐため。数字に線を足すだけで書き換えられてしまうから'},
+
+ {id:'erdos_num',r:'R',e:'🔢',n:'エルデシュ番号',d:'20世紀の数学者エルデシュと共著論文を書くと1、その人と書くと2…と数える。1500編以上の論文を各地の研究者と書き続けた彼ならではの指標'},
+ {id:'sieve',r:'R',e:'🕸',n:'エラトステネスの篩',d:'2の倍数、3の倍数と順に消していくと素数だけが残る。紀元前の方法だが今も基本的な素数探索法として使われる'},
+ {id:'hilbert',r:'R',e:'🏔',n:'ヒルベルトの23問題',d:'1900年、ヒルベルトが今後解くべき問題を提示した。20世紀の数学の方向を決めた宣言として知られる'},
+ {id:'haikei',r:'N',e:'🔁',n:'背理法',d:'結論を否定すると矛盾が生じることを示して、もとの結論を証明する方法。√2が無理数であることの証明が有名'},
 ];
 function cardsNormal(){return CARDS.filter(c=>c.r!=='H');}
 function grantCard(){
@@ -451,6 +466,24 @@ function checkCardMilestone(){
   let due=0;marks.forEach(m=>{if(state.correct>=m)due++;});
   while(state.cardMile<due){state.cardMile++;grantCard();}
   save();
+}
+function renderTitles(){
+  const lv=lvlInfo(state.xp).level;
+  const rows=TITLES.map((t,i)=>{
+    const n=i+1, got=n<=lv, cur=n===lv;
+    let need=0; for(let k=1;k<n;k++)need+=xpNeed(k);
+    return `<div class="evr ${got?'got':''} ${cur?'cur':''}">
+      <span class="evn">${n}</span><span class="eve">${got?t.e:'🔒'}</span>
+      <div class="evb"><div class="evt">${got?t.n:'？？？'}</div>
+      <div class="evd">${cur?'いまここ':got?'到達済み':'必要 '+need.toLocaleString()+' XP'}</div></div>
+    </div>`;
+  }).join('');
+  screen_.innerHTML=`
+    <button class="back" onclick="renderHome()">‹ もどる</button>
+    <div class="qhead"><h2>🏆 称号の記録</h2><span class="qmeta">${lv}/${TITLES.length}</span></div>
+    <p class="help" style="margin-bottom:12px">レベルが上がるたびに称号が変わる。指を折るところから始まって、計算を極めるまで全${TITLES.length}段階。</p>
+    ${rows}
+    <button class="btn btn-ghost" style="margin-top:10px" onclick="renderHome()">ホームに戻る</button>`;
 }
 function renderZukan(){
   const have=new Set(state.cards||[]);
@@ -689,7 +722,7 @@ function renderHome(){
   $('rankPill').textContent='Lv.'+li.level;
   const wrongN=Object.keys(state.wrong).length;
   screen_.innerHTML=`
-    <div class="card stat">
+    <div class="card stat" style="cursor:pointer" onclick="renderTitles()">
       <svg class="ring" viewBox="0 0 100 100">
         <circle cx="50" cy="50" r="40" fill="none" stroke="var(--panel2)" stroke-width="12"/>
         <circle cx="50" cy="50" r="40" fill="none" stroke="var(--primary)" stroke-width="12"
@@ -702,7 +735,7 @@ function renderHome(){
       <div style="flex:1">
         <div style="font-size:13px;font-weight:800;color:var(--primary)">${t.e} ${t.n}</div>
         <div style="font-size:11px;color:var(--sub);font-weight:700;margin-top:4px">
-          ${li.max?'最高レベル到達！':'あと '+(li.need-li.cur)+' XP'}</div>
+          ${li.max?'最高レベル到達！':'あと '+(li.need-li.cur)+' XP'}　<span style="color:var(--accent)">称号の記録 ›</span></div>
         <div style="font-size:11px;color:var(--sub);font-weight:700;margin-top:2px">
           累計 ${state.correct.toLocaleString()} 問正解${state.streak.count>=2?'　🔥'+state.streak.count+'日連続':''}</div>
       </div>
