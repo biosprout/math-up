@@ -41,6 +41,27 @@
 
   .card{background:var(--panel);border:1px solid var(--border);border-radius:18px;
     padding:16px 18px;margin-bottom:12px;box-shadow:var(--shadow)}
+  .daily{display:flex;align-items:center;gap:13px;border-radius:20px;padding:15px 17px;margin-bottom:16px;cursor:pointer;
+    background:linear-gradient(135deg,var(--primary-dark) 0%,var(--primary) 100%);color:#fff;box-shadow:var(--shadow);transition:.15s}
+  .daily:active{transform:scale(.985)}
+  .daily.done{background:linear-gradient(135deg,#C4790F 0%,#D98A1F 100%);color:#2A1D00}
+  .daily .dic{width:42px;height:42px;border-radius:13px;background:rgba(255,255,255,.2);
+    display:flex;align-items:center;justify-content:center;font-size:22px;flex:0 0 auto}
+  .daily .dbd{flex:1;min-width:0}
+  .daily .dbd h3{font-size:16px;font-weight:900;letter-spacing:.2px;line-height:1.3}
+  .daily .dbd p{font-size:11px;font-weight:600;opacity:.88;margin-top:3px;line-height:1.45}
+  .daily .dbar{height:5px;border-radius:99px;background:rgba(255,255,255,.3);margin-top:8px;overflow:hidden}
+  .daily .dbar i{display:block;height:100%;background:currentColor;border-radius:99px}
+  .daily .dgo{font-size:12px;font-weight:800;background:rgba(255,255,255,.22);
+    padding:8px 12px;border-radius:999px;flex:0 0 auto;white-space:nowrap}
+  .catbar{height:6px;border-radius:99px;background:var(--panel2);overflow:hidden;flex:1;margin:0 10px}
+  .catbar i{display:block;height:100%;border-radius:99px;background:var(--primary)}
+  .catbar i.bad{background:var(--danger)}
+  .catbar i.mid{background:var(--accent)}
+  .catrow{display:flex;align-items:center;font-size:12px;font-weight:700;padding:7px 0;border-bottom:1px solid var(--border)}
+  .catrow:last-child{border:0}
+  .catrow .cn{flex:0 0 auto;max-width:52%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .catrow .cv{font-family:'Poppins';flex:0 0 auto;color:var(--sub)}
   .label{font-size:12px;font-weight:800;color:var(--sub);margin:16px 0 8px}
   .help{font-size:11.5px;color:var(--sub);font-weight:500;line-height:1.7}
 
@@ -177,7 +198,7 @@
 
 <script>
 const STORE_KEY='mathup_v1';
-const APP_VER='20260830k';
+const APP_VER='20260831a';
 const $=id=>document.getElementById(id);
 const screen_=$('screen');
 const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
@@ -203,26 +224,74 @@ const MODES=[
 ];
 function modeOf(id){return MODES.find(m=>m.id===id);}
 
+/* ===== 問題のパターン（どこで転んだかの単位） =====
+   記録は細かい粒度で残しておく。あとから粗くまとめることはできても、逆はできないため。 */
+const CATN={
+ add1n:'1けたのたし算', add1c:'1けたのたし算（くり上がり）',
+ add2n:'2けたのたし算', add2c:'2けたのたし算（くり上がり）',
+ add3n:'3けたのたし算', add3c:'3けたのたし算（くり上がり）',
+ sub1n:'1けたのひき算', sub1b:'1けたのひき算（くり下がり）',
+ sub2n:'2けたのひき算', sub2b:'2けたのひき算（くり下がり）',
+ sub3n:'3けたのひき算', sub3b:'3けたのひき算（くり下がり）',
+ mul1:'九九', mul2:'2けた×1けた', mul3:'2けた×2けた',
+ div1:'九九のわり算', div2:'2けたの商', div3:'2けた÷2けた',
+ kuku:'九九の逆引き',
+ hosu10:'10の補数', hosu100:'100の補数', hosu1000:'1000の補数',
+ seifu_add:'正負の数（たし算）', seifu_sub:'正負の数（ひき算）',
+ seifu_mul:'正負の数（かけ算）', seifu_div:'正負の数（わり算）',
+ kufuu_100:'100に近い数のかけ算', kufuu_25:'25 × □ の工夫',
+ kufuu_11:'× 11 の工夫', kufuu_5:'× 5 の工夫',
+ gaisan:'およその見当',
+};
+const CATS=Object.keys(CATN);
+function catName(t){return CATN[t]||t;}
+// 指定したパターンの問題を新しい数字で作る
+function mkCat(cat){
+  let gen;
+  if(/^add\d/.test(cat))gen=()=>mkAdd(+cat[3]);
+  else if(/^sub\d/.test(cat))gen=()=>mkSub(+cat[3]);
+  else if(/^mul\d/.test(cat))gen=()=>mkMul(+cat[3]);
+  else if(/^div\d/.test(cat))gen=()=>mkDiv(+cat[3]);
+  else if(cat==='kuku')gen=mkKuku;
+  else if(cat.indexOf('hosu')===0)gen=mkHosu;
+  else if(cat.indexOf('seifu')===0)gen=mkSeifu;
+  else if(cat.indexOf('kufuu')===0)gen=mkKufuu;
+  else gen=mkGaisan;
+  for(let i=0;i<40;i++){const q=gen();if(q.t===cat)return q;}
+  return gen();
+}
+
 /* ===== 問題生成 ===== */
+// くり上がり・くり下がりがあるか。どこで転んだかを見分けるための目印
+function hasCarry(a,b){let c=0;while(a>0||b>0){if((a%10)+(b%10)+c>=10)return true;c=0;a=Math.floor(a/10);b=Math.floor(b/10);}return false;}
+function hasBorrow(a,b){let br=0;while(b>0||br){if((a%10)-br<(b%10))return true;a=Math.floor(a/10);b=Math.floor(b/10);br=0;}return false;}
 function mkAdd(d){
-  if(d===1){const a=rnd(2,9),b=rnd(2,9);return{q:`${a} + ${b}`,a:a+b};}
-  if(d===2){const a=rnd(11,99),b=rnd(11,99);return{q:`${a} + ${b}`,a:a+b};}
-  const a=rnd(101,999),b=rnd(101,999);return{q:`${a} + ${b}`,a:a+b};
+  d=d||2; let a,b;
+  if(d===1){a=rnd(2,9);b=rnd(2,9);}
+  else if(d===2){a=rnd(11,99);b=rnd(11,99);}
+  else{a=rnd(101,999);b=rnd(101,999);}
+  return{q:`${a} + ${b}`,a:a+b,t:'add'+d+(hasCarry(a,b)?'c':'n')};
 }
 function mkSub(d){
-  if(d===1){const a=rnd(5,18),b=rnd(2,a-1);return{q:`${a} - ${b}`,a:a-b};}
-  if(d===2){const a=rnd(21,199),b=rnd(11,a-1);return{q:`${a} - ${b}`,a:a-b};}
-  const a=rnd(301,999),b=rnd(101,a-1);return{q:`${a} - ${b}`,a:a-b};
+  d=d||2; let a,b;
+  if(d===1){a=rnd(5,18);b=rnd(2,a-1);}
+  else if(d===2){a=rnd(21,199);b=rnd(11,a-1);}
+  else{a=rnd(301,999);b=rnd(101,a-1);}
+  return{q:`${a} - ${b}`,a:a-b,t:'sub'+d+(hasBorrow(a,b)?'b':'n')};
 }
 function mkMul(d){
-  if(d===1){const a=rnd(2,9),b=rnd(2,9);return{q:`${a} × ${b}`,a:a*b};}
-  if(d===2){const a=rnd(11,29),b=rnd(3,9);return{q:`${a} × ${b}`,a:a*b};}
-  const a=rnd(12,49),b=rnd(11,29);return{q:`${a} × ${b}`,a:a*b};
+  d=d||2; let a,b;
+  if(d===1){a=rnd(2,9);b=rnd(2,9);}
+  else if(d===2){a=rnd(11,29);b=rnd(3,9);}
+  else{a=rnd(12,49);b=rnd(11,29);}
+  return{q:`${a} × ${b}`,a:a*b,t:'mul'+d};
 }
 function mkDiv(d){
-  if(d===1){const b=rnd(2,9),ans=rnd(2,9);return{q:`${b*ans} ÷ ${b}`,a:ans};}
-  if(d===2){const b=rnd(3,9),ans=rnd(11,29);return{q:`${b*ans} ÷ ${b}`,a:ans};}
-  const b=rnd(11,29),ans=rnd(3,19);return{q:`${b*ans} ÷ ${b}`,a:ans};
+  d=d||2; let b,ans;
+  if(d===1){b=rnd(2,9);ans=rnd(2,9);}
+  else if(d===2){b=rnd(3,9);ans=rnd(11,29);}
+  else{b=rnd(11,29);ans=rnd(3,19);}
+  return{q:`${b*ans} ÷ ${b}`,a:ans,t:'div'+d};
 }
 function mkAddSub(d){ return rnd(0,1)?mkAdd(d||2):mkSub(d||2); }
 function mkMulDiv(d){ return rnd(0,1)?mkMul(d||2):mkDiv(d||2); }
@@ -233,32 +302,32 @@ function mkDrill(d,ops){
 }
 function mkKuku(){
   const a=rnd(2,9),b=rnd(2,9);
-  return{q:`${a*b} = ${a} × ?`,a:b,hint:'九九を逆からたどる'};
+  return{q:`${a*b} = ${a} × ?`,a:b,hint:'九九を逆からたどる',t:'kuku'};
 }
 function mkHosu(){
   const base=pick([10,100,1000]);
   const a=base===10?rnd(1,9):base===100?rnd(11,99):rnd(101,999);
-  return{q:`${a} + ? = ${base}`,a:base-a,hint:'あといくつで '+base+' になる？'};
+  return{q:`${a} + ? = ${base}`,a:base-a,hint:'あといくつで '+base+' になる？',t:'hosu'+base};
 }
 function mkSeifu(){
   const t=rnd(1,4);
   const s=()=>rnd(0,1)?1:-1;
   const f=n=>n<0?`(${n})`:`${n}`;
-  if(t===1){const a=s()*rnd(2,20),b=s()*rnd(2,20);return{q:`${a} + ${f(b)}`,a:a+b};}
-  if(t===2){const a=s()*rnd(2,20),b=s()*rnd(2,20);return{q:`${a} - ${f(b)}`,a:a-b};}
-  if(t===3){const a=s()*rnd(2,9),b=s()*rnd(2,9);return{q:`${a} × ${f(b)}`,a:a*b};}
-  const b=s()*rnd(2,9),ans=s()*rnd(2,9);return{q:`${b*ans} ÷ ${f(b)}`,a:ans};
+  if(t===1){const a=s()*rnd(2,20),b=s()*rnd(2,20);return{q:`${a} + ${f(b)}`,a:a+b,t:'seifu_add'};}
+  if(t===2){const a=s()*rnd(2,20),b=s()*rnd(2,20);return{q:`${a} - ${f(b)}`,a:a-b,t:'seifu_sub'};}
+  if(t===3){const a=s()*rnd(2,9),b=s()*rnd(2,9);return{q:`${a} × ${f(b)}`,a:a*b,t:'seifu_mul'};}
+  const b=s()*rnd(2,9),ans=s()*rnd(2,9);return{q:`${b*ans} ÷ ${f(b)}`,a:ans,t:'seifu_div'};
 }
 function mkKufuu(){
   const t=rnd(1,4);
   if(t===1){const a=pick([98,99,102,103]),b=rnd(3,9);
-    return{q:`${a} × ${b}`,a:a*b,hint:`${a>100?'100+':'100−'}${Math.abs(a-100)} と考える`};}
+    return{q:`${a} × ${b}`,a:a*b,hint:`${a>100?'100+':'100−'}${Math.abs(a-100)} と考える`,t:'kufuu_100'};}
   if(t===2){const b=pick([4,8,12,16,20,24]);
-    return{q:`25 × ${b}`,a:25*b,hint:'25×4=100 を使う'};}
+    return{q:`25 × ${b}`,a:25*b,hint:'25×4=100 を使う',t:'kufuu_25'};}
   if(t===3){const a=rnd(11,49);
-    return{q:`${a} × 11`,a:a*11,hint:'×10 と ×1 に分ける'};}
+    return{q:`${a} × 11`,a:a*11,hint:'×10 と ×1 に分ける',t:'kufuu_11'};}
   const a=rnd(12,60);
-  return{q:`${a} × 5`,a:a*5,hint:'×10 してから半分にする'};
+  return{q:`${a} × 5`,a:a*5,hint:'×10 してから半分にする',t:'kufuu_5'};
 }
 function mkGaisan(){
   const a=pick([198,297,396,485,502,613,798]),b=rnd(11,29);
@@ -269,7 +338,7 @@ function mkGaisan(){
   const opts=[...set].slice(0,4);
   while(opts.length<4)opts.push(opts[opts.length-1]+base);
   return{q:`${a} × ${b} はおよそ？`,a:near,
-    choices:opts.sort(()=>Math.random()-.5),hint:'けた数で見当をつける'};
+    choices:opts.sort(()=>Math.random()-.5),hint:'けた数で見当をつける',t:'gaisan'};
 }
 
 /* ===== 状態 ===== */
@@ -289,6 +358,47 @@ if(!state.cardCount){
   (state.cards||[]).forEach(id=>{state.cardCount[id]=(state.cardCount[id]||0)+1;});
 }
 if(state.cardMile==null)state.cardMile=0;
+// 記録の一部が欠けた状態で読み込まれてもホームが真っ白にならないようにする
+if(state.xp==null)state.xp=0;
+if(!state.ach)state.ach=[];
+if(!state.streak)state.streak={day:'',count:0};
+if(state.total==null)state.total=0;
+if(state.correct==null)state.correct=0;
+if(!state.cfg)state.cfg={};
+if(!state.mstat)state.mstat={};
+function dayNum(t){const d=t||new Date();return Math.floor((d.getTime()-d.getTimezoneOffset()*6e4)/864e5);}
+// これまで state.wrong に溜まっていた「まちがえた問題」を、一度だけパターン別の記録に移す
+function migrateWrong(){
+  if(state.mstatMig)return;
+  state.mstatMig=1;
+  Object.keys(state.wrong||{}).forEach(q=>{
+    const t=catOfText(q);
+    if(!t)return;
+    const ms=state.mstat[t]||{c:0,w:0};
+    ms.w++; state.mstat[t]=ms;
+  });
+  save();
+}
+function catOfText(q){
+  if(/およそ/.test(q))return 'gaisan';
+  let m=q.match(/^(\d+) \+ \? = (\d+)$/); if(m)return 'hosu'+m[2];
+  m=q.match(/^(\d+) = (\d+) × \?$/); if(m)return 'kuku';
+  if(/\(/.test(q)||/^-/.test(q)){
+    if(/ \+ /.test(q))return 'seifu_add';
+    if(/ - /.test(q))return 'seifu_sub';
+    if(/ × /.test(q))return 'seifu_mul';
+    if(/ ÷ /.test(q))return 'seifu_div';
+    return null;
+  }
+  m=q.match(/^(\d+) ([+\-×÷]) (\d+)$/);
+  if(!m)return null;
+  const a=+m[1],b=+m[3],dg=Math.min(3,Math.max(String(a).length,String(b).length));
+  if(m[2]==='+')return 'add'+dg+(hasCarry(a,b)?'c':'n');
+  if(m[2]==='-')return 'sub'+dg+(hasBorrow(a,b)?'b':'n');
+  if(m[2]==='×')return 'mul'+(a<10&&b<10?1:(b<10?2:3));
+  return 'div'+(a<100?1:(a<1000?2:3));
+}
+migrateWrong();
 
 const MAXLV=20;
 function xpNeed(l){return 40*l+2*l*l;}
@@ -344,6 +454,8 @@ const ACH_SECRET=[
  {id:'speed',name:'電光石火',desc:'100本ノックを5分以内に完走'},
  {id:'comeback',name:'背理法',desc:'まちがえた問題をすべて正解にする'},
  {id:'secret',name:'数の神秘',desc:'隠し図鑑を手に入れた'},
+ {id:'daily7',name:'日課',desc:'今日の20問を7回やりきった'},
+ {id:'daily30',name:'習慣化',desc:'今日の20問を30回やりきった'},
 ];
 function achAll(){return ACH.concat(ACH_SECRET);}
 function isSecret(id){return ACH_SECRET.some(a=>a.id===id);}
@@ -381,6 +493,8 @@ function touchStreak(){
 }
 function checkAch(){
   const lv=lvlInfo(state.xp).level;
+  if((state.dailyDone||0)>=7)unlock('daily7');
+  if((state.dailyDone||0)>=30)unlock('daily30');
   if(state.correct>=100)unlock('q100');
   if(state.correct>=500)unlock('q500');
   if(state.correct>=2000)unlock('q2000');
@@ -533,6 +647,125 @@ function renderZukan(){
 /* ===== ゲーム ===== */
 let g=null;
 let cfg={diff:2,ops:['add','sub','mul','div'],count:100};
+
+/* ===================== 今日の20問 =====================
+   まちがえた問題そのものではなく、まちがえた「パターン」を覚えておいて、
+   数字を変えた新しい問題を出す。                                    */
+const DAILY_N=20, DAILY_CAT_MAX=5;
+function catScore(cat,today){
+  const s=state.mstat[cat];
+  if(!s||(s.c+s.w)===0)return 55;                  // まだやったことがない
+  const err=s.w/(s.c+s.w);                         // 誤答率
+  const el=Math.max(0,s.d?today-s.d:60);           // 何日ぶりか（端末の時計がずれても負にしない）
+  return Math.max(5, 20+err*120+Math.min(el,30)*1.5);
+}
+function buildDaily(){
+  const today=dayNum();
+  const w=CATS.map(c=>Math.pow(catScore(c,today),2));   // 差をはっきりさせる
+  const used={},list=[];
+  for(let i=0;i<DAILY_N;i++){
+    let tot=0;
+    const ww=CATS.map((c,k)=>{const v=(used[c]||0)>=DAILY_CAT_MAX?0:w[k];tot+=v;return v;});
+    if(tot<=0)break;
+    let r=Math.random()*tot,cat=CATS[0];
+    for(let k=0;k<CATS.length;k++){r-=ww[k];if(r<=0){cat=CATS[k];break;}}
+    used[cat]=(used[cat]||0)+1;
+    list.push(mkCat(cat));
+  }
+  return list;
+}
+function daily(){
+  const t=todayStr();
+  if(!state.daily||state.daily.d!==t){
+    const l=buildDaily();
+    if(!l.length)return null;
+    state.daily={d:t,list:l,i:0,ok:0,fin:false};
+    save();
+  }
+  return state.daily;
+}
+function dailyCard(){
+  const d=daily(); if(!d)return '';
+  const tot=d.list.length,done=d.i,fin=d.fin||done>=tot;
+  let sub,go;
+  if(fin){ sub='おわり！ '+d.ok+'/'+tot+' 正解'; go='もう一度'; }
+  else if(done>0){ sub='あと '+(tot-done)+' 問'; go='つづき'; }
+  else { sub='苦手なパターンを多めに出すよ'; go='はじめる'; }
+  return `<div class="daily${fin?' done':''}" onclick="startDaily()">
+      <div class="dic">${fin?'🎉':'☀️'}</div>
+      <div class="dbd"><h3>今日の${DAILY_N}問</h3><p>${sub}</p>${
+        (done>0&&!fin)?`<div class="dbar"><i style="width:${Math.round(done/tot*100)}%"></i></div>`:''}</div>
+      <div class="dgo">${go} ›</div>
+    </div>`;
+}
+function startDaily(){
+  const d=daily();
+  if(!d){toast('問題を作れませんでした');return;}
+  const rest=d.list.slice(d.i);
+  const replay=!rest.length;
+  const list=replay?d.list.slice():rest;   // やり終わっていたら同じ20問でもう一周（記録は据え置き）
+  if(!list.length)return;
+  touchStreak();
+  g={m:{id:'daily',i:'☀️',n:'今日の'+DAILY_N+'問',count:list.length,mk:null},
+     i:0,score:0,combo:0,maxCombo:0,miss:[],buf:'',answered:false,t0:Date.now(),
+     cur:null,list:list,done:false,ta:false,timer:null,daily:true,replay:replay};
+  g.m.mk=()=>g.list[g.i];
+  next();
+}
+function retryDailyMiss(){
+  const list=g.miss.slice();
+  if(!list.length){renderHome();return;}
+  g={m:{id:'daily',i:'🔁',n:'まちがえた問題',count:list.length,mk:null},
+     i:0,score:0,combo:0,maxCombo:0,miss:[],buf:'',answered:false,t0:Date.now(),
+     cur:null,list:list,done:false,ta:false,timer:null,daily:true,replay:true};
+  g.m.mk=()=>g.list[g.i];
+  next();
+}
+function finishDaily(){
+  const d=state.daily,total=g.list.length,rate=Math.round(g.score/total*100);
+  const rank=rate>=95?'S':rate>=85?'A':rate>=70?'B':rate>=50?'C':'D';
+  const sec=Math.round((Date.now()-g.t0)/1000);
+  const alldone=!!d&&d.i>=d.list.length;
+  if(alldone&&d&&!d.fin){d.fin=true;state.dailyDone=(state.dailyDone||0)+1;}
+  unlock('first');
+  addXp(rate>=95?30:rate>=85?20:10);
+  save();checkAch();
+  // パターンごとの内訳。どこで転んだかが一目でわかる
+  const per={};
+  g.list.forEach(q=>{if(!q.t)return;per[q.t]=per[q.t]||{n:0,ng:0};per[q.t].n++;});
+  g.miss.forEach(q=>{if(q.t&&per[q.t])per[q.t].ng++;});
+  const all=Object.keys(per).map(t=>({t:t,n:per[t].n,ok:per[t].n-per[t].ng}))
+    .sort((a,b)=>(a.ok/a.n)-(b.ok/b.n));
+  const bad=all.filter(r=>r.ok<r.n);
+  const show=(bad.length?bad:all).slice(0,6);          // 転んだところだけ、多くても6行
+  const restN=all.length-show.length;
+  const rows=show.map(r=>{const p=r.ok/r.n*100;
+      return `<div class="catrow"><span class="cn">${catName(r.t)}</span>
+        <span class="catbar"><i class="${p<50?'bad':p<100?'mid':''}" style="width:${p}%"></i></span>
+        <span class="cv">${r.ok}/${r.n}</span></div>`;}).join('')
+    +(restN?`<p class="help" style="margin-top:8px">ほか ${restN} パターンは全問正解</p>`:'');
+  screen_.innerHTML=`
+    <button class="back" onclick="renderHome()">‹ もどる</button>
+    <div class="card">
+      <div class="rank">${rank}</div>
+      <div style="text-align:center;font-size:14px;font-weight:800;margin-bottom:14px">${g.score} / ${total} 問正解</div>
+      <div class="rline"><span>正答率</span><span>${rate}%</span></div>
+      <div class="rline"><span>かかった時間</span><span>${Math.floor(sec/60)}分${String(sec%60).padStart(2,'0')}秒</span></div>
+      <div class="rline"><span>最大れんぞく正解</span><span>${g.maxCombo}</span></div>
+      <div class="rline"><span>今日のぶん</span><span>${alldone?'完了':'あと '+Math.max(0,d.list.length-d.i)+' 問'}</span></div>
+    </div>
+    <div class="label">📊 パターンべつ</div>
+    <div class="card">${rows}</div>
+    ${g.miss.length?`<div class="label">まちがえた問題（${g.miss.length}）</div>
+      <div class="card">${g.miss.slice(0,12).map(x=>
+        `<div class="rec"><span>${x.q}</span><b>${x.a}</b></div>`).join('')}</div>`:''}
+    <p class="help" style="text-align:center;margin:10px 0 0">明日はまた新しい${DAILY_N}問が出るよ。まちがえたパターンは数字を変えてまた出てくる</p>
+    <div class="row2" style="margin-top:10px">
+      <button class="btn btn-ghost" onclick="renderHome()">ホームへ</button>
+      ${g.miss.length?`<button class="btn btn-primary" onclick="retryDailyMiss()">まちがえた ${g.miss.length} 問をもう一度</button>`
+                     :`<button class="btn btn-primary" onclick="startDaily()">もう一度</button>`}
+    </div>`;
+}
 function openMode(mid){
   const m=modeOf(mid);
   if(!m.opt)return start(mid);
@@ -632,6 +865,12 @@ function submit(){
     state.wrong[g.cur.q]=g.cur.a;
     pop(30);
   }
+  if(g.cur.t){                                   // どのパターンで転んだかを残す
+    const ms=state.mstat[g.cur.t]||{c:0,w:0};
+    if(ok)ms.c++; else ms.w++;
+    ms.d=dayNum(); state.mstat[g.cur.t]=ms;
+  }
+  if(g.daily&&!g.replay&&state.daily){state.daily.i++;if(ok)state.daily.ok++;}
   save();checkAch();render();
   setTimeout(()=>{ if(!g||g.done)return; g.i++;next(); },ok?450:1600);
 }
@@ -682,6 +921,7 @@ function finish(){
   if(!g||g.done)return;
   g.done=true;
   if(g.timer)clearInterval(g.timer);
+  if(g.daily)return finishDaily();
   const m=g.m;
   const total=g.ta?Math.max(1,g.i):m.count;
   const rate=Math.round(g.score/total*100);
@@ -745,6 +985,7 @@ function renderHome(){
   $('rankPill').textContent='Lv.'+li.level;
   const wrongN=Object.keys(state.wrong).length;
   screen_.innerHTML=`
+    ${dailyCard()}
     <div class="card stat" style="cursor:pointer" onclick="renderTitles()">
       <svg class="ring" viewBox="0 0 100 100">
         <circle cx="50" cy="50" r="40" fill="none" stroke="var(--panel2)" stroke-width="12"/>
@@ -853,7 +1094,8 @@ function exportProgress(){
   return JSON.stringify({app:'mathup',v:1,ver:APP_VER,d:{
     xp:state.xp,ach:state.ach,best:state.best,total:state.total,
     correct:state.correct,streak:state.streak,stat:state.stat,wrong:state.wrong,
-    cards:state.cards,cardCount:state.cardCount,cardMile:state.cardMile,cfg:state.cfg}});
+    cards:state.cards,cardCount:state.cardCount,cardMile:state.cardMile,cfg:state.cfg,
+    mstat:state.mstat,mstatMig:state.mstatMig,dailyDone:state.dailyDone}});
 }
 function copyProgress(){
   const t=exportProgress();
@@ -883,6 +1125,8 @@ function importProgress(){
   state.wrong=d.wrong||{};
   state.cards=d.cards||[];state.cardCount=d.cardCount||{};state.cardMile=d.cardMile||0;
   state.cfg=d.cfg||{};
+  state.mstat=d.mstat||{};state.mstatMig=d.mstatMig||0;state.dailyDone=d.dailyDone||0;
+  state.daily=null;
   save();toast('記録を復元しました ✓');renderHome();
 }
 function renderBackup(){
