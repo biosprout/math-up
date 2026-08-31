@@ -36,6 +36,20 @@
   .logo{font-family:'Poppins',sans-serif;font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--primary)}
   .logo span{color:var(--accent)}
   .sub{font-size:11px;color:var(--sub);font-weight:600;margin-top:1px}
+
+  .hsec{background:var(--panel2);border:1px solid var(--border);border-radius:16px;padding:16px 18px;margin-bottom:12px}
+  .hsec h3{font-size:14px;font-weight:900;margin-bottom:8px;color:var(--accent)}
+  .hsec p{font-size:12.5px;line-height:1.9;color:var(--text);font-weight:500;margin-bottom:8px}
+  .hsec p:last-child{margin-bottom:0}
+  .hlist{margin:6px 0 8px;padding-left:1.1em}
+  .hlist li{font-size:12.5px;line-height:1.9;color:var(--sub);font-weight:500;margin-bottom:5px}
+  .hlist li b{color:var(--text)}
+
+  .helpbtn{background:var(--panel2);border:1px solid var(--border);border-radius:999px;
+    width:34px;height:34px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+    font-size:15px;font-weight:800;color:var(--accent);cursor:pointer;margin-right:8px}
+  .helpbtn:active{transform:scale(.94)}
+  .topbar .right{display:flex;align-items:center}
   .rankpill{background:var(--panel);border:1px solid var(--border);border-radius:999px;
     padding:6px 14px;font-family:'Poppins';font-size:12px;font-weight:800;color:var(--sub)}
 
@@ -190,7 +204,7 @@
       <div class="logo">MATH <span>UP!</span></div>
       <div class="sub">計算トレーニング / 小学〜中学</div>
     </div>
-    <div class="rankpill" id="rankPill">Lv.1</div>
+    <button class="helpbtn" onclick="renderHelp()" aria-label="使い方">？</button><div class="rankpill" id="rankPill">Lv.1</div>
   </div>
   <div id="updBar"><b style="flex:1">新しいバージョンがあります</b><button onclick="forceUpdate()">更新する</button></div>
   <div id="screen"></div>
@@ -198,7 +212,7 @@
 
 <script>
 const STORE_KEY='mathup_v1';
-const APP_VER='20260831b';
+const APP_VER='20260831c';
 const $=id=>document.getElementById(id);
 const screen_=$('screen');
 const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
@@ -206,6 +220,46 @@ const pick=a=>a[Math.floor(Math.random()*a.length)];
 function todayStr(){const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
 function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;
   document.body.appendChild(t);setTimeout(()=>t.remove(),2200);}
+
+/* ===== 効果音 =====
+   節目のときだけ鳴らす。音声ファイルは持たず、その場で合成している。 */
+function soundOn(){ return state.sound!==false; }   // 既定はオン
+let _chimeAt=0;
+function chime(kind){
+  if(!soundOn())return;
+  const now=Date.now();
+  if(now-_chimeAt<450)return;     // レベルアップと図鑑が同時に来たときの二度鳴りを防ぐ
+  _chimeAt=now;
+  try{
+    const AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC)return;
+    if(!window._ac)window._ac=new AC();
+    const ac=window._ac;
+    if(ac.state==='suspended')ac.resume();
+    const seq = kind==='level' ? [[523.25,0],[659.25,.10],[783.99,.20],[1046.50,.30]]
+              : kind==='card'  ? [[880.00,0],[1174.66,.09]]
+              :                  [[659.25,0],[783.99,.10],[1046.50,.20]];
+    const dur = kind==='level'?.42:.30;
+    seq.forEach(function(p){
+      const o=ac.createOscillator(), g=ac.createGain();
+      o.type='sine'; o.frequency.value=p[0];
+      const t=ac.currentTime+p[1];
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.linearRampToValueAtTime(.16,t+.012);
+      g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+      o.connect(g); g.connect(ac.destination);
+      o.start(t); o.stop(t+dur+.03);
+    });
+  }catch(e){}
+}
+function toggleSound(){
+  state.sound = !soundOn();
+  save();
+  toast(soundOn()?'🔔 音を鳴らします':'🔕 音を止めました');
+  if(soundOn())chime('card');
+  renderHome();
+}
+
 function pop(n){if(navigator.vibrate)try{navigator.vibrate(n||10)}catch(e){}}
 
 /* ===== モード定義 ===== */
@@ -471,7 +525,7 @@ function addXp(n){
   const b=lvlInfo(state.xp).level;
   state.xp+=n;
   const a=lvlInfo(state.xp).level;
-  if(a>b){pop(20);setTimeout(()=>toast('🎉 Lv.'+a+'「'+titleOf(a).n+'」に到達！'),350);
+  if(a>b){chime('level');pop(20);setTimeout(()=>toast('🎉 Lv.'+a+'「'+titleOf(a).n+'」に到達！'),350);
     if(a%2===0)grantCard();}
   save();
 }
@@ -604,6 +658,7 @@ const CARDS=[
 ];
 function cardsNormal(){return CARDS.filter(c=>c.r!=='H');}
 function grantCard(){
+  chime('card');
   const cnt=state.cardCount||(state.cardCount={});
   const owned=id=>(cnt[id]||0)>0;
   // 未所持は重み3倍。重複も出るが新規が出やすい
@@ -768,7 +823,7 @@ function finishDaily(){
   const rank=rate>=95?'S':rate>=85?'A':rate>=70?'B':rate>=50?'C':'D';
   const sec=Math.round((Date.now()-g.t0)/1000);
   const alldone=!!d&&d.i>=d.list.length;
-  if(alldone&&d&&!d.fin){d.fin=true;state.dailyDone=(state.dailyDone||0)+1;}
+  if(alldone&&d&&!d.fin){d.fin=true;state.dailyDone=(state.dailyDone||0)+1;chime('daily');}
   unlock('first');
   addXp(rate>=95?30:rate>=85?20:10);
   save();checkAch();
@@ -1022,6 +1077,46 @@ function finish(){
 }
 
 /* ===== ホーム ===== */
+function renderHelp(){
+  const sec=(t,body)=>`<div class="hsec"><h3>${t}</h3>${body}</div>`;
+  screen_.innerHTML=`
+    <button class="back" onclick="renderHome()">‹ もどる</button>
+    <div class="label" style="font-size:15px;margin-bottom:10px">❓ 使い方ガイド</div>
+    <p class="help" style="margin-bottom:14px">加減乗除の100本ノックから、九九の逆引き、補数、正負の数、工夫して計算、概算まで8モード。問題はその場で作られるので、やるたびに新しい問題が出ます。</p>
+
+    ${sec('1. 迷ったら「今日の20問」',
+      '<p>ホームのいちばん上にある <b>今日の20問</b> を押すだけで、その日のぶんが始まります。何をやるか選ばなくていいので、まずはここからどうぞ。</p>'+
+      '<ul class="hlist"><li><b>苦手なもの</b> — まちがえてから日が経ったものほど先に出ます</li>'+
+      '<li><b>そろそろ忘れそうなもの</b> — 正解が続いているものほど間隔をあけて出します</li>'+
+      '<li><b>はじめてのもの</b> — 毎日少しずつまぜます</li></ul>'+
+      '<p>何日休んでも「たまった○○問」のような表示は出ません。いつ開いても20問だけです。まちがえたものは、日をおいてまた出てきます。</p>')}
+
+    ${sec('2. 学習のしかた', '<ul class="hlist"><li><b>今日の20問</b> — ホームのいちばん上。まちがえた<b>パターン</b>を覚えていて、数字を変えた新しい問題を出します</li><li><b>100本ノック</b> — 四則を混ぜて100問。難易度と問題数を選べます</li><li><b>たし算・ひき算 / かけ算・わり算</b> — 演算をしぼって練習します</li><li><b>九九の逆引き</b> — 「56は何×何？」で因数の感覚を養います</li><li><b>補数</b> — 10・100・1000をつくる相棒をさがします</li><li><b>正負の数 / 工夫して計算 / 概算</b> — 中学の内容と、速く解くための工夫</li><li><b>まちがえた問題</b> — 直前にまちがえたものをその場で解き直します</li></ul>')}
+
+    ${sec('3. XP・レベル・称号・図鑑',
+      '<p>正解するとXPがたまり、レベルが上がると称号が変わります。レベルアップ・実績の解除・正解数の節目などで、豆知識を集めた<b>図鑑</b>のカードが手に入ります。</p>'+
+      '<p>図鑑には隠しカードもあります。実績は、条件を満たすと自動で解除されます。</p>')}
+
+    ${sec('4. パターンべつの成績', `<p>「今日の20問」を終えると、「くり下がりのひき算 2/4」のようにパターンごとの成績が出ます。どこでつまずいているかが一目で分かります。</p><p>覚えているのは<b>まちがえたパターン</b>のほうです。「25 × 12」でつまずいたら、翌日は「25 × 8」のように、同じ種類の新しい問題が出ます。</p>`)}
+
+    ${sec('5. 音を止めたいとき',
+      '<p>その日のぶんを終えたとき、レベルが上がったとき、図鑑を手に入れたときに短い音が鳴ります。ホームのいちばん下にある <b>🔔 音あり</b> を押すと止まります。もう一度押すと戻ります。</p>'+
+      '<p>学校や電車の中で使うときは、先に切っておくと安心です。</p>')}
+
+    ${sec('6. 記録について',
+      '<p>学習の記録はこの端末の中だけに保存されます。どこかへ送られることはありません。そのかわり、ブラウザの履歴やデータを消すと記録も消えます。</p>'+
+      '<p>機種を変えるときや、記録を残しておきたいときは、ホームのいちばん下にある <b>💾 記録の保存</b> から書き出しておいてください。別の端末で読みこめば続きから使えます。</p>')}
+
+    ${sec('7. 困ったとき',
+      '<ul class="hlist">'+
+      '<li><b>新しくしたい</b> — ホームの下にある「🔄 更新を確認」を押します</li>'+
+      '<li><b>電波がないところで使いたい</b> — 一度開いておけば、次からはオフラインでも動きます</li>'+
+      '<li><b>ホーム画面に置きたい</b> — ブラウザの共有ボタンから「ホーム画面に追加」を選びます</li>'+
+      '</ul>')}
+
+    <p class="help" style="text-align:center;margin-top:14px">バージョン ${APP_VER}</p>`;
+  window.scrollTo(0,0);
+}
 function renderHome(){
   const li=lvlInfo(state.xp),t=titleOf(li.level);
   $('rankPill').textContent='Lv.'+li.level;
@@ -1100,7 +1195,7 @@ function renderHome(){
         <div class="ad">${a.desc}</div></div>`).join('')}</div>`:'';})()}
 
     <div style="display:flex;gap:8px;margin-top:16px">
-      <button class="btn btn-ghost" style="flex:1;font-size:12px;padding:11px" onclick="checkUpdate(false)">🔄 更新を確認</button>
+      <button class="btn btn-ghost" style="flex:1;font-size:12px;padding:11px" onclick="toggleSound()">${soundOn()?'🔔 音あり':'🔕 音なし'}</button><button class="btn btn-ghost" style="flex:1;font-size:12px;padding:11px" onclick="checkUpdate(false)">🔄 更新を確認</button>
       <button class="btn btn-ghost" style="flex:1;font-size:12px;padding:11px" onclick="renderBackup()">💾 記録の保存</button>
     </div>
     <p class="help" style="text-align:center;margin-top:8px;opacity:.6">バージョン ${APP_VER}</p>`;
